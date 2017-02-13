@@ -67,60 +67,6 @@
      <property name="title">
       <string>Compute population intensity</string>
      </property>
-     <widget class="QRadioButton" name="radioButton_1">
-      <property name="geometry">
-       <rect>
-        <x>150</x>
-        <y>30</y>
-        <width>98</width>
-        <height>17</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>10</pointsize>
-       </font>
-      </property>
-      <property name="text">
-       <string>Moving Window</string>
-      </property>
-     </widget>
-     <widget class="QRadioButton" name="radioButton_2">
-      <property name="geometry">
-       <rect>
-        <x>254</x>
-        <y>30</y>
-        <width>66</width>
-        <height>17</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>10</pointsize>
-       </font>
-      </property>
-      <property name="text">
-       <string>Gaussian</string>
-      </property>
-     </widget>
-     <widget class="QRadioButton" name="radioButton_3">
-      <property name="geometry">
-       <rect>
-        <x>326</x>
-        <y>30</y>
-        <width>74</width>
-        <height>17</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>10</pointsize>
-       </font>
-      </property>
-      <property name="text">
-       <string>Bi-squared</string>
-      </property>
-     </widget>
      <widget class="QLabel" name="label_5">
       <property name="geometry">
        <rect>
@@ -195,6 +141,69 @@
       <property name="value">
        <number>24</number>
       </property>
+     </widget>
+     <widget class="QRadioButton" name="gauss">
+      <property name="geometry">
+       <rect>
+        <x>160</x>
+        <y>30</y>
+        <width>74</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Gaussian</string>
+      </property>
+      <attribute name="buttonGroup">
+       <string notr="true">bgWeight</string>
+      </attribute>
+     </widget>
+     <widget class="QRadioButton" name="mvwind">
+      <property name="geometry">
+       <rect>
+        <x>328</x>
+        <y>30</y>
+        <width>103</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Moving Window</string>
+      </property>
+      <attribute name="buttonGroup">
+       <string notr="true">bgWeight</string>
+      </attribute>
+     </widget>
+     <widget class="QRadioButton" name="bisquar">
+      <property name="geometry">
+       <rect>
+        <x>239</x>
+        <y>30</y>
+        <width>84</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Bi-squared</string>
+      </property>
+      <attribute name="buttonGroup">
+       <string notr="true">bgWeight</string>
+      </attribute>
      </widget>
     </widget>
     <widget class="QGroupBox" name="groupBox">
@@ -672,4 +681,7 @@ p, li { white-space: pre-wrap; }
    </hints>
   </connection>
  </connections>
+ <buttongroups>
+  <buttongroup name="bgWeight"/>
+ </buttongroups>
 </ui>

@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/plugins/Segreg" >
+        <file>icon.png</file>
+    </qresource>
+</RCC>

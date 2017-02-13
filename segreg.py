@@ -25,6 +25,8 @@ from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 from qgis.utils import *
 import numpy as np
+from scipy.spatial.distance import cdist
+
 # Initialize Qt resources from file resources.py
 import resources
 # Import the code for the dialog
@@ -254,7 +256,67 @@ class Segreg:
         self.pop_sum = np.sum(self.pop, axis=1)
 
         self.iface.messageBar().pushMessage("Info", "Selection saved", level=QgsMessageBar.INFO, duration=3)
-        
+
+
+    # def selectedWeight(self):
+    #     self.dlg.gauss.clicked.connect()
+    #     self.dlg.bisquar.clicked.connect()
+    #     self.dlg.mvwind.clicked.connect()
+
+
+    def runIntensityButton(self):
+        self.dlg.bgWeight.setId(self.dlg.gauss, 1)
+        self.dlg.bgWeight.setId(self.dlg.bisquar, 2)
+        self.dlg.bgWeight.setId(self.dlg.mvwind, 3)
+
+        weight = self.dlg.bgWeight.checkedId()
+        bw = int(self.dlg.leBandwidht.text())
+
+        self.cal_localityMatrix(bw, weight)
+        self.iface.messageBar().pushMessage("Info", str(len(self.locality)), level=QgsMessageBar.INFO, duration=2)
+
+    def cal_localityMatrix(self, bandwidth=5000, weightmethod=1):
+        """
+        This function calculate the local population intensity for all groups.
+        :param bandwidth: bandwidth for neighborhood in meters
+        :param weightmethod: 1 for gaussian, 2 for bi-square and empty for moving window
+        :return: 2d array like with population intensity for all groups
+        """
+        n_local = self.location.shape[0]
+        n_subgroup = self.pop.shape[1]
+        locality_temp = np.empty([n_local, n_subgroup])
+        for index in range(0, n_local):
+            for index_sub in range(0, n_subgroup):
+                cost = cdist(self.location[index, :], self.location)
+                weight = self.getWeight(cost, bandwidth, weightmethod)
+                locality_temp[index, index_sub] = np.sum(weight * np.asarray(self.pop[:, index_sub]))/np.sum(weight)
+        self.locality = locality_temp
+        self.locality[np.where(self.locality < 0)[0], np.where(self.locality < 0)[1]] = 0
+
+        fname = "C:/Users/sandro/groups.txt"
+        np.savetxt(fname, self.locality, delimiter=',', newline='\n')
+
+    def getWeight(self, distance, bandwidth, weightmethod=1):
+        """
+        This function computes the weights for neighborhood. Default value is Gaussian(1)
+        :param distance: distance in meters to be considered for weighting
+        :param bandwidth: bandwidth in meters selected to perform neighborhood
+        :param weightmethod: method to be used: 1-gussian , 2-bi square and empty-moving windows
+        :return: weight value for internal use
+        """
+        distance = np.asarray(distance.T)
+        if weightmethod == 1:
+            weight = np.exp((-0.5) * (distance / bandwidth) * (distance / bandwidth))
+        elif weightmethod == 2:
+            weight = (1 - (distance / bandwidth) * (distance / bandwidth)) * (
+            1 - (distance / bandwidth) * (distance / bandwidth))
+            sel = np.where(distance > bandwidth)
+            weight[sel[0]] = 0
+        else:
+            weight = 1
+            sel = np.where(distance > bandwidth)
+            weight[sel[0], :] = 0
+        return weight
 
     def clicked(self, item):
         #self.dlg.lwGroups.item.setBackgroundColor("blue")
@@ -273,10 +335,14 @@ class Segreg:
         selectedLayerIndex = self.dlg.cbLayers.currentIndex()
         self.addLayerAttributes(selectedLayerIndex)
 
-        # initialize dialog loop to add atributes for display
+        # initialize dialog loop to add attributes for display
         self.dlg.cbLayers.currentIndexChanged["int"].connect(self.addLayerAttributes)
 
+        # save selected values from user and populate internals
         self.dlg.pbConfirm.clicked.connect(self.confirmButton)
+
+        # run population intensity calculation
+        self.dlg.pbRunIntensity.clicked.connect(self.runIntensityButton)
 
         # # position on current layer selected from list view
         # if self.layers is None:
