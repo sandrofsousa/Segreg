@@ -265,15 +265,17 @@ class Segreg:
 
 
     def runIntensityButton(self):
+        # set fixed IDs for radioButtons
         self.dlg.bgWeight.setId(self.dlg.gauss, 1)
         self.dlg.bgWeight.setId(self.dlg.bisquar, 2)
         self.dlg.bgWeight.setId(self.dlg.mvwind, 3)
 
+        # set parameters to call locality matrix
         weight = self.dlg.bgWeight.checkedId()
         bw = int(self.dlg.leBandwidht.text())
 
         self.cal_localityMatrix(bw, weight)
-        self.iface.messageBar().pushMessage("Info", str(len(self.locality)), level=QgsMessageBar.INFO, duration=2)
+        self.iface.messageBar().pushMessage("Info", "Matrix of shape %s computed" % str(self.locality.shape), level=QgsMessageBar.INFO, duration=4)
 
     def cal_localityMatrix(self, bandwidth=5000, weightmethod=1):
         """
@@ -293,7 +295,7 @@ class Segreg:
         self.locality = locality_temp
         self.locality[np.where(self.locality < 0)[0], np.where(self.locality < 0)[1]] = 0
 
-        fname = "C:/Users/sandro/groups.txt"
+        fname = "C:/Users/sandro/intensity.txt"
         np.savetxt(fname, self.locality, delimiter=',', newline='\n')
 
     def getWeight(self, distance, bandwidth, weightmethod=1):
