@@ -90,7 +90,8 @@ class Segreg:
         self.global_dissimilarity = []
         self.local_exposure = []
         self.global_exposure = []
-
+        self.local_entropy = []
+        self.global_entropy = []
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -168,6 +169,10 @@ class Segreg:
         del self.toolbar
 
     def addLayers(self):
+        """
+        This function add layers from canvas to check box. It only includes non geographic layers.
+        This is due to a restriction at scipy funtion CDIST to calculate distance the matrix.
+        """
         # clear box
         self.dlg.cbLayers.clear()
 
@@ -184,6 +189,11 @@ class Segreg:
         self.dlg.cbLayers.addItems(layer_list)
 
     def addLayerAttributes(self, layer_index):
+        """
+        This function populates ID and attributes from layer for selection.
+        :param layer_index:
+        :return:
+        """
         # clear list
         self.dlg.cbId.clear()
         self.dlg.lwGroups.clear()
@@ -276,6 +286,10 @@ class Segreg:
                                             level=QgsMessageBar.INFO, duration=4)
 
     def runMeasuresButton(self):
+        """
+        This function call the functions to compute local and global measures. It populates internals
+        with lists holding the results for saving.
+        """
         # call local and global dissimilarity measures
         if self.dlg.diss_local.isChecked() is True:
             self.cal_localDissimilarity()
@@ -288,9 +302,14 @@ class Segreg:
         if self.dlg.expo_global.isChecked() is True:
             self.cal_globalExposure()
 
+        # call local and global entropy measures
+        if self.dlg.entro_local.isChecked() is True:
+            self.cal_localEntropy()
+        if self.dlg.entro_global.isChecked() is True:
+            self.cal_globalEntropy()
+
         self.saveResults()
         self.test()
-
 
     def getWeight(self, distance, bandwidth, weightmethod=1):
         """
@@ -404,20 +423,58 @@ class Segreg:
         global_exp = global_exp.reshape((m, m))
         self.global_exposure = global_exp
 
+    def cal_localEntropy(self):
+        """
+        This function computes the local entropy score for a unit area Ei (diversity). A unit within the
+        metropolitan area, such as a census tract. If population intensity was previously computed,
+        the spatial version will be returned, else the non spatial version will be selected (raw data).
+        :return: 2d array with local indices
+        """
+        if len(self.locality) == 0:
+            proportion = np.asarray(self.pop / self.pop_sum)
+        else:
+            proportion = np.asarray(self.locality / np.sum(self.locality))
+        entropy = proportion * np.log(1 / proportion)
+        entropy[np.isnan(entropy)] = 0
+        entropy[np.isinf(entropy)] = 0
+        entropy = np.sum(entropy, axis=1)
+        entropy = entropy.reshape((self.n_location, 1))
+        self.local_entropy = entropy
+
+    def cal_globalEntropy(self):
+        """
+        This function computes the global entropy score E (diversity). A metropolitan area's entropy score.
+        :return: diversity score
+        """
+        group_score = []
+        if len(self.locality) == 0:
+            pop_total = np.sum(self.pop_sum)
+            prop = np.asarray(np.sum(self.pop, axis=0))[0]
+        else:
+            pop_total = np.sum(self.locality)
+            prop = np.asarray(np.sum(self.locality, axis=0))
+        for group in prop:
+            group_idx = group / pop_total * np.log(1 / (group / pop_total))
+            group_score.append(group_idx)
+        global_entro = np.sum(group_score)
+        self.global_entropy = global_entro
+
+
+
     # def clicked(self, item):
     #     #self.dlg.lwGroups.item.setBackgroundColor("blue")
     #     QMessageBox.information(self, "lwGroups", "You clicked: "+item.text())
 
     def test(self):
-        self.iface.messageBar().pushMessage("Info", str(self.global_exposure), level=QgsMessageBar.INFO, duration=4)
+        self.iface.messageBar().pushMessage("Info", str(self.global_entropy), level=QgsMessageBar.INFO, duration=4)
 
     def saveResults(self):
         fname = "C:/Users/sandro/result.txt"
-        np.savetxt(fname, self.local_exposure, delimiter=',', newline='\n')
-        self.iface.messageBar().pushMessage("Info", str(self.local_exposure.shape), level=QgsMessageBar.INFO, duration=4)
+        np.savetxt(fname, self.local_entropy, delimiter=',', newline='\n')
+        self.iface.messageBar().pushMessage("Info", str(self.local_entropy.shape), level=QgsMessageBar.INFO, duration=4)
 
     def run(self):
-        """Run method that performs all the real work"""
+        """Run method to call dialog and connect interface with functions"""
         # show the dialog
         self.dlg.show()
 
