@@ -257,13 +257,6 @@ class Segreg:
 
         self.iface.messageBar().pushMessage("Info", "Selection saved", level=QgsMessageBar.INFO, duration=3)
 
-
-    # def selectedWeight(self):
-    #     self.dlg.gauss.clicked.connect()
-    #     self.dlg.bisquar.clicked.connect()
-    #     self.dlg.mvwind.clicked.connect()
-
-
     def runIntensityButton(self):
         # set fixed IDs for radioButtons
         self.dlg.bgWeight.setId(self.dlg.gauss, 1)
@@ -303,7 +296,7 @@ class Segreg:
         This function computes the weights for neighborhood. Default value is Gaussian(1)
         :param distance: distance in meters to be considered for weighting
         :param bandwidth: bandwidth in meters selected to perform neighborhood
-        :param weightmethod: method to be used: 1-gussian , 2-bi square and empty-moving windows
+        :param weightmethod: method to be used: 1-gussian , 2-bi square and 3-moving window
         :return: weight value for internal use
         """
         distance = np.asarray(distance.T)
@@ -314,10 +307,12 @@ class Segreg:
             1 - (distance / bandwidth) * (distance / bandwidth))
             sel = np.where(distance > bandwidth)
             weight[sel[0]] = 0
-        else:
+        elif weightmethod == 3:
             weight = 1
             sel = np.where(distance > bandwidth)
             weight[sel[0], :] = 0
+        else:
+            raise Exception('Invalid weight method selected!')
         return weight
 
     def clicked(self, item):
