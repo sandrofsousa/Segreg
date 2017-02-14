@@ -509,6 +509,7 @@ class Segreg:
 
         # measures = ["locality", "local_exposure", "local_dissimilarity", "local_entropy", "local_indexh"]
         computed = []
+        data = tuple([eval(x) for x in computed])
 
         if len(self.locality) != 0:
             computed.append('self.locality')
@@ -536,7 +537,8 @@ class Segreg:
             computed.append('self.local_indexh')
             names.append('indexh')
 
-        results = np.concatenate(computed, axis=1)
+        results = np.concatenate(data, axis=1)
+        return results
 
             # self.global_dissimilarity = []
         # self.global_exposure = []
@@ -550,7 +552,7 @@ class Segreg:
         self.dlg.leOutput.setText(filename)
         path = self.dlg.leOutput.text()
 
-        np.savetxt(path, self.local_entropy, delimiter=',', newline='\n')
+        np.savetxt(path, self.joinResultsData(), delimiter=',', newline='\n')
 
     def run(self):
         """Run method to call dialog and connect interface with functions"""
