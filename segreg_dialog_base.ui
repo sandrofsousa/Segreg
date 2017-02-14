@@ -42,7 +42,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>1</number>
    </property>
    <widget class="QWidget" name="tab_input">
     <attribute name="title">
@@ -399,7 +399,7 @@
        <number>24</number>
       </property>
      </widget>
-     <widget class="QCheckBox" name="checkBox_1">
+     <widget class="QCheckBox" name="diss_local">
       <property name="geometry">
        <rect>
         <x>30</x>
@@ -430,7 +430,7 @@
        <string>Local</string>
       </property>
      </widget>
-     <widget class="QCheckBox" name="checkBox_2">
+     <widget class="QCheckBox" name="expo_local">
       <property name="geometry">
        <rect>
         <x>30</x>
@@ -443,7 +443,7 @@
        <string>Expousure/Isolation</string>
       </property>
      </widget>
-     <widget class="QCheckBox" name="checkBox_3">
+     <widget class="QCheckBox" name="entro_local">
       <property name="geometry">
        <rect>
         <x>30</x>
@@ -456,7 +456,7 @@
        <string>Entropy</string>
       </property>
      </widget>
-     <widget class="QCheckBox" name="checkBox_4">
+     <widget class="QCheckBox" name="idxh_local">
       <property name="geometry">
        <rect>
         <x>30</x>
@@ -469,7 +469,7 @@
        <string>Index H</string>
       </property>
      </widget>
-     <widget class="QCheckBox" name="checkBox_6">
+     <widget class="QCheckBox" name="expo_global">
       <property name="geometry">
        <rect>
         <x>240</x>
@@ -482,7 +482,7 @@
        <string>Expousure/Isolation</string>
       </property>
      </widget>
-     <widget class="QCheckBox" name="checkBox_7">
+     <widget class="QCheckBox" name="entro_global">
       <property name="geometry">
        <rect>
         <x>240</x>
@@ -495,7 +495,7 @@
        <string>Entropy</string>
       </property>
      </widget>
-     <widget class="QCheckBox" name="checkBox_5">
+     <widget class="QCheckBox" name="diss_global">
       <property name="geometry">
        <rect>
         <x>240</x>
@@ -508,7 +508,7 @@
        <string>Dissimilarity</string>
       </property>
      </widget>
-     <widget class="QCheckBox" name="checkBox_8">
+     <widget class="QCheckBox" name="idxh_global">
       <property name="geometry">
        <rect>
         <x>240</x>
