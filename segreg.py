@@ -316,9 +316,6 @@ class Segreg:
         if self.dlg.idxh_global.isChecked() is True:
             self.cal_globalIndexH()
 
-        self.saveResults()
-        self.test()
-
     def getWeight(self, distance, bandwidth, weightmethod=1):
         """
         This function computes the weights for neighborhood. Default value is Gaussian(1)
@@ -505,9 +502,12 @@ class Segreg:
         self.iface.messageBar().pushMessage("Info", str(self.global_indexh), level=QgsMessageBar.INFO, duration=4)
 
     def saveResults(self):
-        fname = "C:/Users/sandro/result.txt"
-        np.savetxt(fname, self.local_indexh, delimiter=',', newline='\n')
-        self.iface.messageBar().pushMessage("Info", str(self.local_indexh.shape), level=QgsMessageBar.INFO, duration=4)
+        """ Function to save results to a local file."""
+        filename = QFileDialog.getSaveFileName(self.dlg, "Select output file ","", '*.txt')
+        self.dlg.leOutput.setText(filename)
+        path = self.dlg.leOutput.text()
+
+        np.savetxt(path, self.local_entropy, delimiter=',', newline='\n')
 
     def run(self):
         """Run method to call dialog and connect interface with functions"""
@@ -532,6 +532,10 @@ class Segreg:
 
         # run measures from selected check boxes
         self.dlg.pbRunMeasures.clicked.connect(self.runMeasuresButton)
+
+        # run dialog to select and save output file
+        self.dlg.leOutput.clear()
+        self.dlg.pbOpenPath.clicked.connect(self.saveResults)
 
         # # position on current layer selected from list view
         # if self.layers is None:
