@@ -92,6 +92,8 @@ class Segreg:
         self.global_exposure = []
         self.local_entropy = []
         self.global_entropy = []
+        self.local_indexh = []
+        self.global_indexh = []
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -308,6 +310,12 @@ class Segreg:
         if self.dlg.entro_global.isChecked() is True:
             self.cal_globalEntropy()
 
+        # call local and global index H measures
+        if self.dlg.idxh_local.isChecked() is True:
+            self.cal_localIndexH()
+        if self.dlg.idxh_global.isChecked() is True:
+            self.cal_globalIndexH()
+
         self.saveResults()
         self.test()
 
@@ -459,19 +467,47 @@ class Segreg:
         global_entro = np.sum(group_score)
         self.global_entropy = global_entro
 
+    def cal_localIndexH(self):
+        """
+        This function computes the local entropy index H for all localities. The functions cal_localEntropy() for
+        local diversity and cal_globalEntropy for global entropy are called as input. If population intensity
+        was previously computed, the spatial version will be returned, else the non spatial version will be
+        selected (raw data).
+        :return: array like with scores for n groups (size groups)
+        """
+        local_entropy = self.local_entropy
+        global_entropy = self.global_entropy
+        if len(self.locality) == 0:
+            et = np.asarray(global_entropy * np.sum(self.pop_sum))
+            eei = np.asarray(global_entropy - local_entropy)
+            h_local = eei * np.asarray(self.pop_sum) / et
+        else:
+            et = np.asarray(global_entropy * np.sum(self.locality))
+            eei = np.asarray(global_entropy - local_entropy)
+            h_local = eei * np.sum(self.locality) / et
+        self.local_indexh = h_local
 
+    def cal_globalIndexH(self):
+        """
+        Function to compute global index H returning the sum of local values. The function cal_localIndexH is
+        called as input for sum of individual values.
+        :return: values with global index for each group.
+        """
+        h_local = self.local_indexh
+        h_global = np.sum(h_local, axis=0)
+        self.global_indexh = h_global
 
     # def clicked(self, item):
     #     #self.dlg.lwGroups.item.setBackgroundColor("blue")
     #     QMessageBox.information(self, "lwGroups", "You clicked: "+item.text())
 
     def test(self):
-        self.iface.messageBar().pushMessage("Info", str(self.global_entropy), level=QgsMessageBar.INFO, duration=4)
+        self.iface.messageBar().pushMessage("Info", str(self.global_indexh), level=QgsMessageBar.INFO, duration=4)
 
     def saveResults(self):
         fname = "C:/Users/sandro/result.txt"
-        np.savetxt(fname, self.local_entropy, delimiter=',', newline='\n')
-        self.iface.messageBar().pushMessage("Info", str(self.local_entropy.shape), level=QgsMessageBar.INFO, duration=4)
+        np.savetxt(fname, self.local_indexh, delimiter=',', newline='\n')
+        self.iface.messageBar().pushMessage("Info", str(self.local_indexh.shape), level=QgsMessageBar.INFO, duration=4)
 
     def run(self):
         """Run method to call dialog and connect interface with functions"""
