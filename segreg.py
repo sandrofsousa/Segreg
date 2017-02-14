@@ -74,9 +74,6 @@ class Segreg:
         #self.lwGroups = QListWidget()
         #self.lwGroups.setSelectionMode(QAbstractItemView.ExtendedSelection)
 
-        # Connect buttons to functions
-        # self.dlg.pushButton_1.clicked.connect(self.confirmButton)
-
         # Segregation measures attributes
         self.attributeMatrix = np.matrix([])    # attributes matrix full size - all columns
         self.location = []                      # x and y coordinates from file (2D lists)
@@ -87,6 +84,10 @@ class Segreg:
         self.n_group = 0                        # number of groups (attributeMatrix.shape[1] - 4)
         self.costMatrix = []                    # scipy cdist distance matrix
         self.track_id = []                      # track ids at string format
+
+        # Local and global results
+        self.local_dissimilarity = []
+        self.global_dissimilarity = []
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -268,28 +269,17 @@ class Segreg:
         bw = int(self.dlg.leBandwidht.text())
 
         self.cal_localityMatrix(bw, weight)
-        self.iface.messageBar().pushMessage("Info", "Matrix of shape %s computed" % str(self.locality.shape), level=QgsMessageBar.INFO, duration=4)
+        self.iface.messageBar().pushMessage("Info", "Matrix of shape %s computed" % str(self.locality.shape),
+                                            level=QgsMessageBar.INFO, duration=4)
 
-    def cal_localityMatrix(self, bandwidth=5000, weightmethod=1):
-        """
-        This function calculate the local population intensity for all groups.
-        :param bandwidth: bandwidth for neighborhood in meters
-        :param weightmethod: 1 for gaussian, 2 for bi-square and empty for moving window
-        :return: 2d array like with population intensity for all groups
-        """
-        n_local = self.location.shape[0]
-        n_subgroup = self.pop.shape[1]
-        locality_temp = np.empty([n_local, n_subgroup])
-        for index in range(0, n_local):
-            for index_sub in range(0, n_subgroup):
-                cost = cdist(self.location[index, :], self.location)
-                weight = self.getWeight(cost, bandwidth, weightmethod)
-                locality_temp[index, index_sub] = np.sum(weight * np.asarray(self.pop[:, index_sub]))/np.sum(weight)
-        self.locality = locality_temp
-        self.locality[np.where(self.locality < 0)[0], np.where(self.locality < 0)[1]] = 0
-
-        fname = "C:/Users/sandro/intensity.txt"
-        np.savetxt(fname, self.locality, delimiter=',', newline='\n')
+    def runMeasuresButton(self):
+        # call functions to calculate measures
+        if self.dlg.diss_local.isChecked() is True:
+            self.cal_localDissimilarity()
+        if self.dlg.diss_global.isChecked() is True:
+            self.cal_globalDissimilarity()
+        if self.dlg.expo_local.isChecked() is True:
+        # if self.dlg.expo_local.isChecked() is True:
 
     def getWeight(self, distance, bandwidth, weightmethod=1):
         """
@@ -315,10 +305,66 @@ class Segreg:
             raise Exception('Invalid weight method selected!')
         return weight
 
+    def cal_localityMatrix(self, bandwidth=5000, weightmethod=1):
+        """
+        This function calculate the local population intensity for all groups.
+        :param bandwidth: bandwidth for neighborhood in meters
+        :param weightmethod: 1 for gaussian, 2 for bi-square and empty for moving window
+        :return: 2d array like with population intensity for all groups
+        """
+        n_local = self.location.shape[0]
+        n_subgroup = self.pop.shape[1]
+        locality_temp = np.empty([n_local, n_subgroup])
+        for index in range(0, n_local):
+            for index_sub in range(0, n_subgroup):
+                cost = cdist(self.location[index, :], self.location)
+                weight = self.getWeight(cost, bandwidth, weightmethod)
+                locality_temp[index, index_sub] = np.sum(weight * np.asarray(self.pop[:, index_sub]))/np.sum(weight)
+        self.locality = locality_temp
+        self.locality[np.where(self.locality < 0)[0], np.where(self.locality < 0)[1]] = 0
+
+    def cal_localDissimilarity(self):
+        """
+        Compute local dissimilarity for all groups.
+        :return: 1d array like with results for all groups, size of localities
+        """
+        if len(self.locality) == 0:
+            lj = np.ravel(self.pop_sum)
+            tjm = np.asarray(self.pop) * 1.0 / lj[:, None]
+            tm = np.sum(self.pop, axis=0) * 1.0 / np.sum(self.pop)
+            index_i = np.sum(np.asarray(tm) * np.asarray(1 - tm))
+            pop_total = np.sum(self.pop)
+            local_diss = np.sum(1.0 * np.array(np.fabs(tjm - tm)) *
+                                np.asarray(self.pop_sum).ravel()[:, None] / (2 * pop_total * index_i), axis=1)
+        else:
+            lj = np.asarray(np.sum(self.locality, axis=1))
+            tjm = self.locality * 1.0 / lj[:, None]
+            tm = np.sum(self.pop, axis=0) * 1.0 / np.sum(self.pop)
+            index_i = np.sum(np.asarray(tm) * np.asarray(1 - tm))
+            pop_total = np.sum(self.pop)
+            local_diss = np.sum(1.0 * np.array(np.fabs(tjm - tm)) *
+                                np.asarray(self.pop_sum).ravel()[:, None] / (2 * pop_total * index_i), axis=1)
+        local_diss = np.nan_to_num(local_diss)
+        self.local_dissimilarity = local_diss
+
+    def cal_globalDissimilarity(self):
+        """
+        This function call local dissimilarity and compute the sum from individual values.
+        :return: display global value
+        """
+        local_diss = self.local_dissimilarity
+        self.global_dissimilarity = np.sum(local_diss)
+
     def clicked(self, item):
         #self.dlg.lwGroups.item.setBackgroundColor("blue")
         QMessageBox.information(self, "lwGroups", "You clicked: "+item.text())
 
+    def test(self):
+        self.iface.messageBar().pushMessage("Info", str(self.global_dissimilarity), level=QgsMessageBar.INFO, duration=4)
+
+    def saveResults(self):
+        fname = "C:/Users/sandro/result.txt"
+        np.savetxt(fname, self.local_dissimilarity, delimiter=',', newline='\n')
 
     def run(self):
         """Run method that performs all the real work"""
@@ -340,6 +386,9 @@ class Segreg:
 
         # run population intensity calculation
         self.dlg.pbRunIntensity.clicked.connect(self.runIntensityButton)
+
+        # run measures from selected check boxes
+        self.dlg.pbRunMeasures.clicked.connect(self.runMeasuresButton)
 
         # # position on current layer selected from list view
         # if self.layers is None:
