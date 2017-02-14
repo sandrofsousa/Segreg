@@ -88,6 +88,9 @@ class Segreg:
         # Local and global results
         self.local_dissimilarity = []
         self.global_dissimilarity = []
+        self.local_exposure = []
+        self.global_exposure = []
+
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -273,13 +276,21 @@ class Segreg:
                                             level=QgsMessageBar.INFO, duration=4)
 
     def runMeasuresButton(self):
-        # call functions to calculate measures
+        # call local and global dissimilarity measures
         if self.dlg.diss_local.isChecked() is True:
             self.cal_localDissimilarity()
         if self.dlg.diss_global.isChecked() is True:
             self.cal_globalDissimilarity()
+
+        # call local and global exposure/isolation measures
         if self.dlg.expo_local.isChecked() is True:
-        # if self.dlg.expo_local.isChecked() is True:
+            self.cal_localExposure()
+        if self.dlg.expo_global.isChecked() is True:
+            self.cal_globalExposure()
+
+        self.saveResults()
+        self.test()
+
 
     def getWeight(self, distance, bandwidth, weightmethod=1):
         """
@@ -345,6 +356,7 @@ class Segreg:
             local_diss = np.sum(1.0 * np.array(np.fabs(tjm - tm)) *
                                 np.asarray(self.pop_sum).ravel()[:, None] / (2 * pop_total * index_i), axis=1)
         local_diss = np.nan_to_num(local_diss)
+        local_diss = np.asmatrix(local_diss).transpose()
         self.local_dissimilarity = local_diss
 
     def cal_globalDissimilarity(self):
@@ -355,16 +367,54 @@ class Segreg:
         local_diss = self.local_dissimilarity
         self.global_dissimilarity = np.sum(local_diss)
 
-    def clicked(self, item):
-        #self.dlg.lwGroups.item.setBackgroundColor("blue")
-        QMessageBox.information(self, "lwGroups", "You clicked: "+item.text())
+    def cal_localExposure(self):
+        """
+        This function computes the local exposure index of group m to group n.
+        in situations where m=n, then the result is the isolation index.
+        :return: 2d list with individual indexes
+        """
+        m = self.n_group
+        j = self.n_location
+        exposure_rs = np.zeros((j, (m * m)))
+        if len(self.locality) == 0:
+            local_expo = np.asarray(self.pop) * 1.0 / np.asarray(np.sum(self.pop, axis=0)).ravel()
+            locality_rate = np.asarray(self.pop) * 1.0 / np.asarray(np.sum(self.pop, axis=1)).ravel()[:, None]
+            for i in range(m):
+                exposure_rs[:, ((i * m) + 0):((i * m) + m)] = np.asarray(locality_rate) * \
+                                                              np.asarray(local_expo[:, i]).ravel()[:, None]
+        else:
+            local_expo = np.asarray(self.pop) * 1.0 / np.asarray(np.sum(self.pop, axis=0)).ravel()
+            locality_rate = np.asarray(self.locality) * 1.0 / np.asarray(np.sum(self.locality, axis=1)).ravel()[:, None]
+            for i in range(m):
+                exposure_rs[:, ((i * m) + 0):((i * m) + m)] = np.asarray(locality_rate) * \
+                                                              np.asarray(local_expo[:, i]).ravel()[:, None]
+        exposure_rs[np.isinf(exposure_rs)] = 0
+        exposure_rs[np.isnan(exposure_rs)] = 0
+        exposure_rs = np.asmatrix(exposure_rs)
+        self.local_exposure = exposure_rs
+
+    def cal_globalExposure(self):
+        """
+        This function call local exposure function and sum the results for the global index.
+        :return: displays global number result
+        """
+        m = self.n_group
+        local_exp = self.local_exposure
+        global_exp = np.sum(local_exp, axis=0)
+        global_exp = global_exp.reshape((m, m))
+        self.global_exposure = global_exp
+
+    # def clicked(self, item):
+    #     #self.dlg.lwGroups.item.setBackgroundColor("blue")
+    #     QMessageBox.information(self, "lwGroups", "You clicked: "+item.text())
 
     def test(self):
-        self.iface.messageBar().pushMessage("Info", str(self.global_dissimilarity), level=QgsMessageBar.INFO, duration=4)
+        self.iface.messageBar().pushMessage("Info", str(self.global_exposure), level=QgsMessageBar.INFO, duration=4)
 
     def saveResults(self):
         fname = "C:/Users/sandro/result.txt"
-        np.savetxt(fname, self.local_dissimilarity, delimiter=',', newline='\n')
+        np.savetxt(fname, self.local_exposure, delimiter=',', newline='\n')
+        self.iface.messageBar().pushMessage("Info", str(self.local_exposure.shape), level=QgsMessageBar.INFO, duration=4)
 
     def run(self):
         """Run method that performs all the real work"""
@@ -396,7 +446,7 @@ class Segreg:
         
         #self.dlg.cbLayers.currentIndexChanged["int"].connect(self.selectId)
         #self.dlg.cbLayers.currentIndexChanged["int"].connect(self.selectGroups)
-        
+
         #self.dlg.connect(self.lwGroups, SIGNAL("itemSelectionChanged()"), self.clicked)
 
         # Run the dialog event loop
