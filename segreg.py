@@ -85,14 +85,14 @@ class Segreg:
         self.costMatrix = []                    # scipy cdist distance matrix
         self.track_id = []                      # track ids at string format
 
-        # Local and global results
+        # Local and global internals
         self.local_dissimilarity = []
-        self.global_dissimilarity = []
         self.local_exposure = []
-        self.global_exposure = []
         self.local_entropy = []
-        self.global_entropy = []
         self.local_indexh = []
+        self.global_dissimilarity = []
+        self.global_exposure = []
+        self.global_entropy = []
         self.global_indexh = []
 
     # noinspection PyMethodMayBeStatic
@@ -500,6 +500,49 @@ class Segreg:
 
     def test(self):
         self.iface.messageBar().pushMessage("Info", str(self.global_indexh), level=QgsMessageBar.INFO, duration=4)
+
+    def joinResultsData(self):
+        """ Function to join results on a unique matrix and assign names for columns"""
+        names = ['id','x','y']
+        for i in range(self.n_group):
+            names.append('group_' + str(i))
+
+        # measures = ["locality", "local_exposure", "local_dissimilarity", "local_entropy", "local_indexh"]
+        computed = []
+
+        if len(self.locality) != 0:
+            computed.append('self.locality')
+            for i in range(self.n_group):
+                names.append('intens_' + str(i))
+
+        if len(self.local_exposure) != 0:
+            computed.append('self.local_exposure')
+            for i in range(self.n_group):
+                for j in range(self.n_group):
+                    if i == j:
+                        names.append('iso_' + str(i) + str(j))
+                    else:
+                        names.append('exp_' + str(i) + str(j))
+
+        if len (self.local_dissimilarity) != 0:
+            computed.append('self.local_dissimilarity')
+            names.append('dissimil')
+
+        if len (self.local_entropy) != 0:
+            computed.append('self.local_entropy')
+            names.append('entropy')
+
+        if len (self.local_indexh) != 0:
+            computed.append('self.local_indexh')
+            names.append('indexh')
+
+        results = np.concatenate(computed, axis=1)
+
+            # self.global_dissimilarity = []
+        # self.global_exposure = []
+        # self.global_entropy = []
+        # self.global_indexh = []
+
 
     def saveResults(self):
         """ Function to save results to a local file."""
