@@ -507,17 +507,14 @@ class Segreg:
         for i in range(self.n_group):
             names.append('group_' + str(i))
 
-        # measures = ["locality", "local_exposure", "local_dissimilarity", "local_entropy", "local_indexh"]
-        computed = []
-        data = tuple([eval(x) for x in computed])
-
+        measures_computed = []
         if len(self.locality) != 0:
-            computed.append('self.locality')
+            measures_computed.append('self.locality')
             for i in range(self.n_group):
                 names.append('intens_' + str(i))
 
         if len(self.local_exposure) != 0:
-            computed.append('self.local_exposure')
+            measures_computed.append('self.local_exposure')
             for i in range(self.n_group):
                 for j in range(self.n_group):
                     if i == j:
@@ -526,33 +523,45 @@ class Segreg:
                         names.append('exp_' + str(i) + str(j))
 
         if len (self.local_dissimilarity) != 0:
-            computed.append('self.local_dissimilarity')
+            measures_computed.append('self.local_dissimilarity')
             names.append('dissimil')
 
         if len (self.local_entropy) != 0:
-            computed.append('self.local_entropy')
+            measures_computed.append('self.local_entropy')
             names.append('entropy')
 
         if len (self.local_indexh) != 0:
-            computed.append('self.local_indexh')
+            measures_computed.append('self.local_indexh')
             names.append('indexh')
 
-        results = np.concatenate(data, axis=1)
-        return results
-
-            # self.global_dissimilarity = []
-        # self.global_exposure = []
-        # self.global_entropy = []
-        # self.global_indexh = []
-
+        output_labels = tuple([eval(x) for x in measures_computed])
+        computed_results = np.concatenate(output_labels, axis=1)
+        results_matrix = np.concatenate((self.track_id, self.attributeMatrix, computed_results), axis=1)
+        labels = str(', '.join(names))
+        measures_computed[:] = []
+        return results_matrix, labels
 
     def saveResults(self):
         """ Function to save results to a local file."""
-        filename = QFileDialog.getSaveFileName(self.dlg, "Select output file ","", '*.txt')
+        filename = QFileDialog.getSaveFileName(self.dlg, "Select output file ", "", "*.csv")
         self.dlg.leOutput.setText(filename)
         path = self.dlg.leOutput.text()
+        result = self.joinResultsData()
+        np.savetxt(path, result[0], header=result[1], delimiter=',', newline='\n', fmt="%s")
 
-        np.savetxt(path, self.joinResultsData(), delimiter=',', newline='\n')
+        # save global results to an alternate local file
+        with open("%s_global.txt" % path, "w") as f:
+            f.write('Global dissimilarity: ' + str(self.global_dissimilarity))
+            f.write('\nGlobal entropy: ' + str(self.global_entropy))
+            f.write('\nGlobal Index H: \n' + str(self.global_indexh))
+            f.write('\nGlobal isolation/exposure: \n')
+            f.write(str(self.global_exposure))
+
+        # clear local variables after save
+        self.local_dissimilarity = []
+        self.local_exposure = []
+        self.local_entropy = []
+        self.local_indexh = []
 
     def run(self):
         """Run method to call dialog and connect interface with functions"""
