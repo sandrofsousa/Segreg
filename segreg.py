@@ -549,6 +549,7 @@ class Segreg:
         result = self.joinResultsData()
         np.savetxt(path, result[0], header=result[1], delimiter=',', newline='\n', fmt="%s")
 
+
         # save global results to an alternate local file
         with open("%s_global.txt" % path, "w") as f:
             f.write('Global dissimilarity: ' + str(self.global_dissimilarity))
