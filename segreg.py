@@ -77,7 +77,7 @@ class Segreg:
         # Segregation measures attributes
         self.attributeMatrix = np.matrix([])    # attributes matrix full size - all columns
         self.location = []                      # x and y coordinates from file (2D lists)
-        self.pop = []                           # groups to be analysed [:,4:n] (2D lists)
+        self.pop = []                           # groups to be analysed [:,3:n] (2D lists)
         self.pop_sum = []                       # sum of population groups from pop (1d array)
         self.locality = []                      # local population intensity for groups
         self.n_location = 0                     # length of list (n lines) (attributeMatrix.shape[0])
@@ -194,7 +194,6 @@ class Segreg:
         """
         This function populates ID and attributes from layer for selection.
         :param layer_index:
-        :return:
         """
         # clear list
         self.dlg.cbId.clear()
@@ -271,6 +270,7 @@ class Segreg:
         self.n_location = self.attributeMatrix.shape[0]
         self.pop_sum = np.sum(self.pop, axis=1)
 
+        self.dlg.tabWidget.setTabEnabled(1, True)
         self.iface.messageBar().pushMessage("Info", "Selection saved", level=QgsMessageBar.INFO, duration=3)
 
     def runIntensityButton(self):
@@ -498,8 +498,12 @@ class Segreg:
     #     #self.dlg.lwGroups.item.setBackgroundColor("blue")
     #     QMessageBox.information(self, "lwGroups", "You clicked: "+item.text())
 
-    def test(self):
-        self.iface.messageBar().pushMessage("Info", str(self.global_indexh), level=QgsMessageBar.INFO, duration=4)
+    def checkSelectedGroups(self):
+        if self.dlg.tabWidget.currentIndex() == 1:
+            if len(self.pop) == 0:
+                self.dlg.tabWidget.setTabEnabled(1, False)
+                msg = "Please select and confirm the attributes at Input Parameters tab!"
+                self.iface.messageBar().pushMessage("Warning", msg, level=QgsMessageBar.WARNING, duration=4)
 
     def joinResultsData(self):
         """ Function to join results on a unique matrix and assign names for columns"""
@@ -549,7 +553,6 @@ class Segreg:
         result = self.joinResultsData()
         np.savetxt(path, result[0], header=result[1], delimiter=',', newline='\n', fmt="%s")
 
-
         # save global results to an alternate local file
         with open("%s_global.txt" % path, "w") as f:
             f.write('Global dissimilarity: ' + str(self.global_dissimilarity))
@@ -575,6 +578,10 @@ class Segreg:
         # populate initial view with first layer
         selectedLayerIndex = self.dlg.cbLayers.currentIndex()
         self.addLayerAttributes(selectedLayerIndex)
+
+        # fix initial tab on first for attributes selection
+        self.dlg.tabWidget.setCurrentIndex(0)
+        self.dlg.tabWidget.connect(self.dlg.tabWidget, SIGNAL("currentChanged(int)"), self.checkSelectedGroups)
 
         # initialize dialog loop to add attributes for display
         self.dlg.cbLayers.currentIndexChanged["int"].connect(self.addLayerAttributes)

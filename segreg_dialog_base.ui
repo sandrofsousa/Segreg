@@ -52,26 +52,26 @@
      <property name="geometry">
       <rect>
        <x>12</x>
-       <y>340</y>
+       <y>313</y>
        <width>411</width>
-       <height>141</height>
+       <height>171</height>
       </rect>
      </property>
      <property name="font">
       <font>
-       <pointsize>12</pointsize>
+       <pointsize>11</pointsize>
        <weight>75</weight>
        <bold>true</bold>
       </font>
      </property>
      <property name="title">
-      <string>Compute population intensity</string>
+      <string>Compute population intensity - Optional</string>
      </property>
      <widget class="QLabel" name="label_5">
       <property name="geometry">
        <rect>
         <x>11</x>
-        <y>29</y>
+        <y>59</y>
         <width>121</width>
         <height>20</height>
        </rect>
@@ -92,7 +92,7 @@
       <property name="geometry">
        <rect>
         <x>11</x>
-        <y>58</y>
+        <y>85</y>
         <width>131</width>
         <height>20</height>
        </rect>
@@ -110,7 +110,7 @@
       <property name="geometry">
        <rect>
         <x>155</x>
-        <y>58</y>
+        <y>85</y>
         <width>91</width>
         <height>21</height>
        </rect>
@@ -120,7 +120,7 @@
       <property name="geometry">
        <rect>
         <x>11</x>
-        <y>100</y>
+        <y>129</y>
         <width>91</width>
         <height>30</height>
        </rect>
@@ -133,7 +133,7 @@
       <property name="geometry">
        <rect>
         <x>121</x>
-        <y>104</y>
+        <y>133</y>
         <width>281</width>
         <height>21</height>
        </rect>
@@ -146,7 +146,7 @@
       <property name="geometry">
        <rect>
         <x>133</x>
-        <y>30</y>
+        <y>60</y>
         <width>71</width>
         <height>20</height>
        </rect>
@@ -167,7 +167,7 @@
       <property name="geometry">
        <rect>
         <x>286</x>
-        <y>30</y>
+        <y>60</y>
         <width>110</width>
         <height>20</height>
        </rect>
@@ -188,7 +188,7 @@
       <property name="geometry">
        <rect>
         <x>203</x>
-        <y>30</y>
+        <y>60</y>
         <width>81</width>
         <height>20</height>
        </rect>
@@ -205,6 +205,26 @@
        <string notr="true">bgWeight</string>
       </attribute>
      </widget>
+     <widget class="QLabel" name="label_11">
+      <property name="geometry">
+       <rect>
+        <x>5</x>
+        <y>28</y>
+        <width>401</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>7</pointsize>
+        <weight>50</weight>
+        <bold>false</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>For spatial version of measures run the population intensity, otherwise results will be non-spatial.</string>
+      </property>
+     </widget>
     </widget>
     <widget class="QGroupBox" name="groupBox">
      <property name="geometry">
@@ -212,24 +232,24 @@
        <x>12</x>
        <y>20</y>
        <width>411</width>
-       <height>301</height>
+       <height>271</height>
       </rect>
      </property>
      <property name="font">
       <font>
-       <pointsize>12</pointsize>
+       <pointsize>11</pointsize>
        <weight>75</weight>
        <bold>true</bold>
       </font>
      </property>
      <property name="title">
-      <string>Select Attributes</string>
+      <string>Select Attributes - Required</string>
      </property>
      <widget class="QLabel" name="label_2">
       <property name="geometry">
        <rect>
         <x>20</x>
-        <y>65</y>
+        <y>63</y>
         <width>91</width>
         <height>21</height>
        </rect>
@@ -249,7 +269,7 @@
       <property name="geometry">
        <rect>
         <x>120</x>
-        <y>62</y>
+        <y>60</y>
         <width>271</width>
         <height>27</height>
        </rect>
@@ -259,14 +279,14 @@
       <property name="geometry">
        <rect>
         <x>20</x>
-        <y>137</y>
+        <y>124</y>
         <width>111</width>
         <height>21</height>
        </rect>
       </property>
       <property name="font">
        <font>
-        <pointsize>11</pointsize>
+        <pointsize>10</pointsize>
         <weight>50</weight>
         <bold>false</bold>
        </font>
@@ -279,7 +299,7 @@
       <property name="geometry">
        <rect>
         <x>20</x>
-        <y>99</y>
+        <y>93</y>
         <width>91</width>
         <height>21</height>
        </rect>
@@ -299,7 +319,7 @@
       <property name="geometry">
        <rect>
         <x>120</x>
-        <y>96</y>
+        <y>90</y>
         <width>271</width>
         <height>27</height>
        </rect>
@@ -308,28 +328,28 @@
      <widget class="QPushButton" name="pbConfirm">
       <property name="geometry">
        <rect>
-        <x>290</x>
-        <y>190</y>
+        <x>292</x>
+        <y>167</y>
         <width>100</width>
         <height>71</height>
        </rect>
       </property>
       <property name="text">
-       <string>Confirm</string>
+       <string>Confirm Selection</string>
       </property>
      </widget>
      <widget class="QLabel" name="label_1">
       <property name="geometry">
        <rect>
         <x>20</x>
-        <y>32</y>
+        <y>30</y>
         <width>341</width>
         <height>21</height>
        </rect>
       </property>
       <property name="font">
        <font>
-        <pointsize>8</pointsize>
+        <pointsize>7</pointsize>
         <weight>50</weight>
         <bold>false</bold>
        </font>
@@ -342,9 +362,9 @@
       <property name="geometry">
        <rect>
         <x>20</x>
-        <y>170</y>
+        <y>152</y>
         <width>256</width>
-        <height>111</height>
+        <height>101</height>
        </rect>
       </property>
      </widget>
@@ -550,7 +570,7 @@
       </property>
       <property name="font">
        <font>
-        <pointsize>8</pointsize>
+        <pointsize>7</pointsize>
         <weight>50</weight>
         <bold>false</bold>
        </font>
@@ -617,7 +637,7 @@
      </property>
      <property name="font">
       <font>
-       <pointsize>8</pointsize>
+       <pointsize>7</pointsize>
        <weight>50</weight>
        <bold>false</bold>
       </font>
