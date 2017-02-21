@@ -68,11 +68,9 @@ class Segreg:
 
         # Other initializations
         self.layers = []                        # Store layers loaded (non geographical)
-        self.lwGroups = QListView()
-        self.model = QStandardItemModel(self.lwGroups)
-        self.lwGroups.setAcceptDrops(True)
-        #self.lwGroups = QListWidget()
-        #self.lwGroups.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.lvGroups = QListView()
+        self.model = QStandardItemModel(self.lvGroups)
+        self.lvGroups.setSelectionMode(QAbstractItemView.ExtendedSelection)
 
         # Segregation measures attributes
         self.attributeMatrix = np.matrix([])    # attributes matrix full size - all columns
@@ -170,6 +168,27 @@ class Segreg:
         # remove the toolbar
         del self.toolbar
 
+    def clearVariables(self):
+        """clear local list and variables"""
+        # clear input tables
+        self.location = []
+        self.pop = []
+        self.pop_sum = []
+        self.locality = []
+        self.n_location = 0
+        self.n_group = 0
+        self.track_id = []
+
+        # clear results tables
+        self.local_dissimilarity = []
+        self.local_exposure = []
+        self.local_entropy = []
+        self.local_indexh = []
+        self.global_dissimilarity = []
+        self.global_exposure = []
+        self.global_entropy = []
+        self.global_indexh = []
+
     def addLayers(self):
         """
         This function add layers from canvas to check box. It only includes non geographic layers.
@@ -197,39 +216,31 @@ class Segreg:
         """
         # clear list
         self.dlg.cbId.clear()
-        self.dlg.lwGroups.clear()
+        self.model.clear()
+        # self.dlg.lvGroups.clear()
         selectedLayer = self.layers[layer_index]
-        
+
         fields = []
         # get attributes from layer
         for i in selectedLayer.pendingFields():
+            item = QStandardItem(i.name())
+            item.setCheckable(True)
             fields.append(i.name())
+            self.model.appendRow(item)
         # Update id and lwGroups combo boxes with fields
         self.dlg.cbId.addItems(fields)
-        self.dlg.lwGroups.addItems(fields)
+        self.dlg.lvGroups.setModel(self.model)
 
-    def clearVariables(self):
-        """empty local list and variables"""
-        # clear input tables
-        self.location = []
-        self.pop = []
-        self.pop_sum = []
-        self.locality = []
-        self.n_location = 0
-        self.n_group = 0
-        self.track_id = []
-
-        # clear results tables
-        self.local_dissimilarity = []
-        self.local_exposure = []
-        self.local_entropy = []
-        self.local_indexh = []
-        self.global_dissimilarity = []
-        self.global_exposure = []
-        self.global_entropy = []
-        self.global_indexh = []
+        # fields = []
+        # # get attributes from layer
+        # for i in selectedLayer.pendingFields():
+        #     fields.append(i.name())
+        # # Update id and lwGroups combo boxes with fields
+        # self.dlg.cbId.addItems(fields)
+        # self.dlg.lwGroups.addItems(fields)
 
     def selectId(self, layer_index):
+        """This function get the column name for the id selected on combo box"""
         # clear box
         self.dlg.cbId.clear()
         selectedLayer = self.layers[layer_index]
@@ -242,6 +253,7 @@ class Segreg:
         self.dlg.cbId.addItems(fields)
 
     def selectGroups(self, layer_index):
+        """ """
         self.dlg.lwGroups.clear()
         selectedLayer = self.layers[layer_index]
         fields = []
@@ -254,13 +266,14 @@ class Segreg:
         #self.dlg.lwGroups.currentRow.setItemSelected(True)
 
     def confirmButton(self):
+        """Confirm selected data and populate local variables"""
         selectedLayerIndex = self.dlg.cbLayers.currentIndex()
         selectedLayer = self.layers[selectedLayerIndex]
         field_names = [str(field.name()) for field in selectedLayer.pendingFields()][1:]
 
         # populate track_id data
         id_name = self.dlg.cbId.currentText()
-        id_values = selectedLayer.getValues(id_name)[0]  #getDoubleValues for float
+        id_values = selectedLayer.getValues(id_name)[0]  # getDoubleValues for float
         id_values = [str(x) for x in id_values]
         self.track_id = np.asarray(id_values)
         self.track_id = self.track_id.reshape((len(id_values), 1))
@@ -274,7 +287,7 @@ class Segreg:
         # populate groups data
         groups = []
         for i in field_names:
-            values = selectedLayer.getDoubleValues(i)[0]  #getDoubleValues for float
+            values = selectedLayer.getDoubleValues(i)[0]  # getDoubleValues for float
             group = [int(x) for x in values]
             groups.append(group)
         groups = np.asarray(groups).T
@@ -515,10 +528,6 @@ class Segreg:
         h_global = np.sum(h_local, axis=0)
         self.global_indexh = h_global
 
-    # def clicked(self, item):
-    #     #self.dlg.lwGroups.item.setBackgroundColor("blue")
-    #     QMessageBox.information(self, "lwGroups", "You clicked: "+item.text())
-
     def checkSelectedGroups(self):
         if self.dlg.tabWidget.currentIndex() == 1:
             if len(self.pop) == 0:
@@ -622,15 +631,6 @@ class Segreg:
         # run dialog to select and save output file
         self.dlg.leOutput.clear()
         self.dlg.pbOpenPath.clicked.connect(self.saveResults)
-
-        # # position on current layer selected from list view
-        # if self.layers is None:
-        #self.iface.messageBar().pushMessage("Info", "%s" % var, level=QgsMessageBar.INFO, duration=3)
-        
-        #self.dlg.cbLayers.currentIndexChanged["int"].connect(self.selectId)
-        #self.dlg.cbLayers.currentIndexChanged["int"].connect(self.selectGroups)
-
-        #self.dlg.connect(self.lwGroups, SIGNAL("itemSelectionChanged()"), self.clicked)
 
         # Run the dialog event loop
         self.dlg.exec_()

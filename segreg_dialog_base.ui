@@ -42,7 +42,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="tab_input">
     <attribute name="title">
@@ -328,9 +328,9 @@
      <widget class="QPushButton" name="pbConfirm">
       <property name="geometry">
        <rect>
-        <x>292</x>
+        <x>281</x>
         <y>167</y>
-        <width>100</width>
+        <width>111</width>
         <height>71</height>
        </rect>
       </property>
@@ -358,12 +358,12 @@
        <string>Important: Only layers with a projected CRS will be displayed.</string>
       </property>
      </widget>
-     <widget class="QListWidget" name="lwGroups">
+     <widget class="QListView" name="lvGroups">
       <property name="geometry">
        <rect>
         <x>20</x>
-        <y>152</y>
-        <width>256</width>
+        <y>150</y>
+        <width>241</width>
         <height>101</height>
        </rect>
       </property>
