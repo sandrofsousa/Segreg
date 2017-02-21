@@ -208,6 +208,27 @@ class Segreg:
         self.dlg.cbId.addItems(fields)
         self.dlg.lwGroups.addItems(fields)
 
+    def clearVariables(self):
+        """empty local list and variables"""
+        # clear input tables
+        self.location = []
+        self.pop = []
+        self.pop_sum = []
+        self.locality = []
+        self.n_location = 0
+        self.n_group = 0
+        self.track_id = []
+
+        # clear results tables
+        self.local_dissimilarity = []
+        self.local_exposure = []
+        self.local_entropy = []
+        self.local_indexh = []
+        self.global_dissimilarity = []
+        self.global_exposure = []
+        self.global_entropy = []
+        self.global_indexh = []
+
     def selectId(self, layer_index):
         # clear box
         self.dlg.cbId.clear()
@@ -271,7 +292,7 @@ class Segreg:
         self.pop_sum = np.sum(self.pop, axis=1)
 
         self.dlg.tabWidget.setTabEnabled(1, True)
-        self.iface.messageBar().pushMessage("Info", "Selection saved", level=QgsMessageBar.INFO, duration=3)
+        self.iface.messageBar().pushMessage("Info", "Selection saved", level=QgsMessageBar.INFO, duration=2)
 
     def runIntensityButton(self):
         # set fixed IDs for radioButtons
@@ -572,14 +593,17 @@ class Segreg:
         # show the dialog
         self.dlg.show()
 
-        # populate layers list with a projected CRS
+        # clear local variables and tables
+        self.clearVariables()
+
+        # populate layers list using a projected CRS
         self.addLayers()
 
         # populate initial view with first layer
         selectedLayerIndex = self.dlg.cbLayers.currentIndex()
         self.addLayerAttributes(selectedLayerIndex)
 
-        # fix initial tab on first for attributes selection
+        # pin view on first tab for attributes selection
         self.dlg.tabWidget.setCurrentIndex(0)
         self.dlg.tabWidget.connect(self.dlg.tabWidget, SIGNAL("currentChanged(int)"), self.checkSelectedGroups)
 
