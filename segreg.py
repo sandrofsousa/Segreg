@@ -71,6 +71,7 @@ class Segreg:
         self.lvGroups = QListView()
         self.model = QStandardItemModel(self.lvGroups)
         self.lvGroups.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.selectedFields = []
 
         # Segregation measures attributes
         self.attributeMatrix = np.matrix([])    # attributes matrix full size - all columns
@@ -178,6 +179,7 @@ class Segreg:
         self.n_location = 0
         self.n_group = 0
         self.track_id = []
+        self.selectedFields = []
 
         # clear results tables
         self.local_dissimilarity = []
@@ -199,6 +201,7 @@ class Segreg:
 
         self.layers = self.iface.legendInterface().layers()
         layer_list = []
+
         for layer in self.layers:
             # Check if layer is geographic or projected and append projected only
             isgeographic = layer.crs().geographicFlag()
@@ -217,7 +220,6 @@ class Segreg:
         # clear list
         self.dlg.cbId.clear()
         self.model.clear()
-        # self.dlg.lvGroups.clear()
         selectedLayer = self.layers[layer_index]
 
         fields = []
@@ -231,38 +233,18 @@ class Segreg:
         self.dlg.cbId.addItems(fields)
         self.dlg.lvGroups.setModel(self.model)
 
-        # fields = []
-        # # get attributes from layer
-        # for i in selectedLayer.pendingFields():
-        #     fields.append(i.name())
-        # # Update id and lwGroups combo boxes with fields
-        # self.dlg.cbId.addItems(fields)
-        # self.dlg.lwGroups.addItems(fields)
-
-    def selectId(self, layer_index):
-        """This function get the column name for the id selected on combo box"""
-        # clear box
-        self.dlg.cbId.clear()
-        selectedLayer = self.layers[layer_index]
-        fields = []
-
-        # get attributes from layer
-        for field in selectedLayer.pendingFields():
-            fields.append(field.name())
-        # Update id on combo box with fields
-        self.dlg.cbId.addItems(fields)
-
     def selectGroups(self, layer_index):
-        """ """
+        """Get fileds selected on combo box and return list"""
+        layer_index = self.dlg.cbLayers.currentIndex()
         selectedLayer = self.layers[layer_index]
-        fields = []
 
         # get groups from list model
         for i in range(self.model.rowCount()):
             field = self.model.item(i)
             if field.checkState() == 2:
-                fields.append(str(field.text()))
-        return fields
+                self.selectedFields.append(str(field.text()))
+        QMessageBox.critical(None, "Error", str(self.selectedFields))
+        self.selectedFields = []
 
     def confirmButton(self):
         """Confirm selected data and populate local variables"""
@@ -285,7 +267,7 @@ class Segreg:
 
         # populate groups data
         groups = []
-        for i in field_names:
+        for i in self.selectedFields:
             values = selectedLayer.getDoubleValues(i)[0]  # getDoubleValues for float
             group = [int(x) for x in values]
             groups.append(group)
@@ -532,7 +514,9 @@ class Segreg:
             if len(self.pop) == 0:
                 self.dlg.tabWidget.setTabEnabled(1, False)
                 msg = "Please select and confirm the attributes at Input Parameters tab!"
-                self.iface.messageBar().pushMessage("Warning", msg, level=QgsMessageBar.WARNING, duration=4)
+                QMessageBox.critical(None, "Error", msg)
+
+                # self.iface.messageBar().pushMessage("Warning", msg, level=QgsMessageBar.WARNING, duration=4)
 
     def joinResultsData(self):
         """ Function to join results on a unique matrix and assign names for columns"""
@@ -600,36 +584,40 @@ class Segreg:
         """Run method to call dialog and connect interface with functions"""
         # show the dialog
         self.dlg.show()
-
+        QMessageBox.critical(None, "Error", str(self.selectedFields))
         # clear local variables and tables
         self.clearVariables()
 
         # populate layers list using a projected CRS
         self.addLayers()
 
-        # populate initial view with first layer
-        selectedLayerIndex = self.dlg.cbLayers.currentIndex()
-        self.addLayerAttributes(selectedLayerIndex)
+        if not self.layers:
+            QMessageBox.critical(None, "Error", 'No layer found!')
+            return
+        else:
+            # populate initial view with first layer
+            selectedLayerIndex = self.dlg.cbLayers.currentIndex()
+            self.addLayerAttributes(selectedLayerIndex)
 
-        # pin view on first tab for attributes selection
-        self.dlg.tabWidget.setCurrentIndex(0)
-        self.dlg.tabWidget.connect(self.dlg.tabWidget, SIGNAL("currentChanged(int)"), self.checkSelectedGroups)
+            # pin view on first tab for attributes selection
+            self.dlg.tabWidget.setCurrentIndex(0)
+            self.dlg.tabWidget.connect(self.dlg.tabWidget, SIGNAL("currentChanged(int)"), self.checkSelectedGroups)
 
-        # initialize dialog loop to add attributes for display
-        self.dlg.cbLayers.currentIndexChanged["int"].connect(self.addLayerAttributes)
+            # initialize dialog loop to add attributes for display
+            self.dlg.cbLayers.currentIndexChanged["int"].connect(self.addLayerAttributes)
 
-        # save selected values from user and populate internals
-        self.dlg.pbConfirm.clicked.connect(self.confirmButton)
+            # save selected values from user and populate internals
+            # self.dlg.pbConfirm.clicked.connect(self.confirmButton)
+            self.dlg.pbConfirm.clicked.connect(self.selectGroups)
 
-        # run population intensity calculation
-        self.dlg.pbRunIntensity.clicked.connect(self.runIntensityButton)
+            # run population intensity calculation
+            self.dlg.pbRunIntensity.clicked.connect(self.runIntensityButton)
 
-        # run measures from selected check boxes
-        self.dlg.pbRunMeasures.clicked.connect(self.runMeasuresButton)
+            # run measures from selected check boxes
+            self.dlg.pbRunMeasures.clicked.connect(self.runMeasuresButton)
 
-        # run dialog to select and save output file
-        self.dlg.leOutput.clear()
-        self.dlg.pbOpenPath.clicked.connect(self.saveResults)
-
-        # Run the dialog event loop
-        self.dlg.exec_()
+            # run dialog to select and save output file
+            self.dlg.leOutput.clear()
+            self.dlg.pbOpenPath.clicked.connect(self.saveResults)
+            # Run the dialog event loop
+            self.dlg.exec_()
