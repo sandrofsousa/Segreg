@@ -245,7 +245,7 @@ class Segreg:
         self.dlg.cbId.clear()
         selectedLayer = self.layers[layer_index]
         fields = []
-        
+
         # get attributes from layer
         for field in selectedLayer.pendingFields():
             fields.append(field.name())
@@ -254,22 +254,21 @@ class Segreg:
 
     def selectGroups(self, layer_index):
         """ """
-        self.dlg.lwGroups.clear()
         selectedLayer = self.layers[layer_index]
         fields = []
-    
-        # get attributes from layer
-        for i in selectedLayer.pendingFields():
-            field = QListWidgetItem()
-            field.setText(i.name())
-            self.dlg.lwGroups.addItem(field)
-        #self.dlg.lwGroups.currentRow.setItemSelected(True)
+
+        # get groups from list model
+        for i in range(self.model.rowCount()):
+            field = self.model.item(i)
+            if field.checkState() == 2:
+                fields.append(str(field.text()))
+        return fields
 
     def confirmButton(self):
         """Confirm selected data and populate local variables"""
         selectedLayerIndex = self.dlg.cbLayers.currentIndex()
         selectedLayer = self.layers[selectedLayerIndex]
-        field_names = [str(field.name()) for field in selectedLayer.pendingFields()][1:]
+        field_names = self.selectGroups(selectedLayerIndex)
 
         # populate track_id data
         id_name = self.dlg.cbId.currentText()
@@ -305,7 +304,7 @@ class Segreg:
         self.pop_sum = np.sum(self.pop, axis=1)
 
         self.dlg.tabWidget.setTabEnabled(1, True)
-        self.iface.messageBar().pushMessage("Info", "Selection saved", level=QgsMessageBar.INFO, duration=2)
+        self.iface.messageBar().pushMessage("Info", "Input saved", level=QgsMessageBar.INFO, duration=2)
 
     def runIntensityButton(self):
         # set fixed IDs for radioButtons
