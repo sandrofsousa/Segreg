@@ -122,7 +122,7 @@
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>25</y>
+         <y>28</y>
          <width>81</width>
          <height>20</height>
         </rect>
@@ -145,7 +145,7 @@
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>48</y>
+         <y>51</y>
          <width>91</width>
          <height>20</height>
         </rect>
@@ -168,7 +168,7 @@
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>71</y>
+         <y>74</y>
          <width>121</width>
          <height>20</height>
         </rect>
@@ -187,10 +187,6 @@
         <string notr="true">bgWeight</string>
        </attribute>
       </widget>
-      <zorder>gauss</zorder>
-      <zorder>bisquar</zorder>
-      <zorder>mvwind</zorder>
-      <zorder>label_6</zorder>
      </widget>
      <widget class="QGroupBox" name="groupBox_5">
       <property name="geometry">
@@ -398,9 +394,6 @@
       </property>
      </widget>
     </widget>
-    <zorder>groupBox_2</zorder>
-    <zorder>groupBox</zorder>
-    <zorder>label_11</zorder>
    </widget>
    <widget class="QWidget" name="tab_measures">
     <attribute name="title">

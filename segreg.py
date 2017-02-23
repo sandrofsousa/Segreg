@@ -60,6 +60,9 @@ class Segreg:
             if qVersion() > '4.3.3':
                 QCoreApplication.installTranslator(self.translator)
 
+        # Create the dialog (after translation) and keep reference
+        self.dlg = SegregDialog()
+
         # Declare instance attributes
         self.actions = []
         self.menu = self.tr(u'&Segreg')
@@ -69,7 +72,7 @@ class Segreg:
         # Other initializations
         self.layers = []                        # Store layers loaded (non geographical)
         self.lvGroups = QListView()
-        self.model = QStandardItemModel(self.lvGroups)
+        self.model = QStandardItemModel(self.dlg.lvGroups)
         self.lvGroups.setSelectionMode(QAbstractItemView.ExtendedSelection)
 
         # Segregation measures attributes
@@ -122,9 +125,6 @@ class Segreg:
         """Add a toolbar icon to the toolbar.
         """
 
-        # Create the dialog (after translation) and keep reference
-        self.dlg = SegregDialog()
-
         icon = QIcon(icon_path)
         action = QAction(icon, text, parent)
         action.triggered.connect(callback)
@@ -158,6 +158,27 @@ class Segreg:
             callback=self.run,
             parent=self.iface.mainWindow())
 
+        # pin view on first tab for attributes selection
+        self.dlg.tabWidget.setCurrentIndex(0)
+        self.dlg.tabWidget.connect(self.dlg.tabWidget, SIGNAL("currentChanged(int)"), self.checkSelectedGroups)
+
+        # initialize dialog loop to add attributes for display
+        self.dlg.cbLayers.currentIndexChanged["int"].connect(self.addLayerAttributes)
+
+        # save selected values from user and populate internals
+        # self.dlg.pbConfirm.clicked.connect(self.confirmButton)
+        self.dlg.pbConfirm.clicked.connect(self.selectGroups)
+
+        # run population intensity calculation
+        self.dlg.pbRunIntensity.clicked.connect(self.runIntensityButton)
+
+        # run measures from selected check boxes
+        self.dlg.pbRunMeasures.clicked.connect(self.runMeasuresButton)
+
+        # run dialog to select and save output file
+        self.dlg.leOutput.clear()
+        self.dlg.pbOpenPath.clicked.connect(self.saveResults)
+
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
@@ -165,6 +186,7 @@ class Segreg:
                 self.tr(u'&Segreg'),
                 action)
             self.iface.removeToolBarIcon(action)
+
         # remove the toolbar
         del self.toolbar
 
@@ -580,45 +602,23 @@ class Segreg:
 
     def run(self):
         """Run method to call dialog and connect interface with functions"""
-        # show the dialog
-        self.dlg.show()
-
-        # clear local variables and tables
-        # self.clearVariables()
 
         # populate layers list using a projected CRS
         self.addLayers()
 
+        # show the dialog
+        self.dlg.show()
+
         if not self.layers:
             QMessageBox.critical(None, "Error", 'No layer found!')
             return
-        else:
-            # populate initial view with first layer
-            selectedLayerIndex = self.dlg.cbLayers.currentIndex()
-            self.addLayerAttributes(selectedLayerIndex)
 
-            # pin view on first tab for attributes selection
-            self.dlg.tabWidget.setCurrentIndex(0)
-            self.dlg.tabWidget.connect(self.dlg.tabWidget, SIGNAL("currentChanged(int)"), self.checkSelectedGroups)
+        # Run the dialog event loop
+        result = self.dlg.exec_()
 
-            # initialize dialog loop to add attributes for display
-            self.dlg.cbLayers.currentIndexChanged["int"].connect(self.addLayerAttributes)
-
-            # save selected values from user and populate internals
-            # self.dlg.pbConfirm.clicked.connect(self.confirmButton)
-            self.dlg.pbConfirm.clicked.connect(self.selectGroups)
-
-            # run population intensity calculation
-            self.dlg.pbRunIntensity.clicked.connect(self.runIntensityButton)
-
-            # run measures from selected check boxes
-            self.dlg.pbRunMeasures.clicked.connect(self.runMeasuresButton)
-
-            # run dialog to select and save output file
-            self.dlg.leOutput.clear()
-            self.dlg.pbOpenPath.clicked.connect(self.saveResults)
-
-            # Run the dialog event loop
-            self.dlg.exec_()
+        # See if OK was pressed
+        if result:
+            # Do something useful here - delete the line containing pass and
+            # substitute with your code.
 
             self.dlg.dbClose.clicked.connect(self.clearVariables)
