@@ -71,7 +71,6 @@ class Segreg:
         self.lvGroups = QListView()
         self.model = QStandardItemModel(self.lvGroups)
         self.lvGroups.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        self.selectedFields = []
 
         # Segregation measures attributes
         self.attributeMatrix = np.matrix([])    # attributes matrix full size - all columns
@@ -181,6 +180,8 @@ class Segreg:
         self.track_id = []
         self.selectedFields = []
 
+        self.model.clear()
+
         # clear results tables
         self.local_dissimilarity = []
         self.local_exposure = []
@@ -233,18 +234,15 @@ class Segreg:
         self.dlg.cbId.addItems(fields)
         self.dlg.lvGroups.setModel(self.model)
 
-    def selectGroups(self, layer_index):
+    def selectGroups(self):
         """Get fileds selected on combo box and return list"""
-        layer_index = self.dlg.cbLayers.currentIndex()
-        selectedLayer = self.layers[layer_index]
-
-        # get groups from list model
+        selected = []
         for i in range(self.model.rowCount()):
             field = self.model.item(i)
             if field.checkState() == 2:
-                self.selectedFields.append(str(field.text()))
-        QMessageBox.critical(None, "Error", str(self.selectedFields))
-        self.selectedFields = []
+                selected.append(str(field.text()))
+        QMessageBox.critical(None, "Error", str([x for x in selected]))
+        return selected
 
     def confirmButton(self):
         """Confirm selected data and populate local variables"""
@@ -584,9 +582,9 @@ class Segreg:
         """Run method to call dialog and connect interface with functions"""
         # show the dialog
         self.dlg.show()
-        QMessageBox.critical(None, "Error", str(self.selectedFields))
+
         # clear local variables and tables
-        self.clearVariables()
+        # self.clearVariables()
 
         # populate layers list using a projected CRS
         self.addLayers()
@@ -619,5 +617,8 @@ class Segreg:
             # run dialog to select and save output file
             self.dlg.leOutput.clear()
             self.dlg.pbOpenPath.clicked.connect(self.saveResults)
+
             # Run the dialog event loop
             self.dlg.exec_()
+
+            self.dlg.dbClose.clicked.connect(self.clearVariables)
