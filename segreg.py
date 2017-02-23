@@ -159,15 +159,13 @@ class Segreg:
             parent=self.iface.mainWindow())
 
         # pin view on first tab for attributes selection
-        self.dlg.tabWidget.setCurrentIndex(0)
         self.dlg.tabWidget.connect(self.dlg.tabWidget, SIGNAL("currentChanged(int)"), self.checkSelectedGroups)
 
         # initialize dialog loop to add attributes for display
         self.dlg.cbLayers.currentIndexChanged["int"].connect(self.addLayerAttributes)
 
         # save selected values from user and populate internals
-        # self.dlg.pbConfirm.clicked.connect(self.confirmButton)
-        self.dlg.pbConfirm.clicked.connect(self.selectGroups)
+        self.dlg.pbConfirm.clicked.connect(self.confirmButton)
 
         # run population intensity calculation
         self.dlg.pbRunIntensity.clicked.connect(self.runIntensityButton)
@@ -178,6 +176,9 @@ class Segreg:
         # run dialog to select and save output file
         self.dlg.leOutput.clear()
         self.dlg.pbOpenPath.clicked.connect(self.saveResults)
+
+        # clear variables at exit
+        self.dlg.dbClose.clicked.connect(self.clearVariables)
 
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
@@ -203,6 +204,7 @@ class Segreg:
         self.selectedFields = []
 
         self.model.clear()
+        self.dlg.leBandwidht.clear()
 
         # clear results tables
         self.local_dissimilarity = []
@@ -238,7 +240,7 @@ class Segreg:
     def addLayerAttributes(self, layer_index):
         """
         This function populates ID and attributes from layer for selection.
-        :param layer_index:
+        :param layer_index: index of current selected layer
         """
         # clear list
         self.dlg.cbId.clear()
@@ -252,6 +254,7 @@ class Segreg:
             item.setCheckable(True)
             fields.append(i.name())
             self.model.appendRow(item)
+
         # Update id and lwGroups combo boxes with fields
         self.dlg.cbId.addItems(fields)
         self.dlg.lvGroups.setModel(self.model)
@@ -259,18 +262,20 @@ class Segreg:
     def selectGroups(self):
         """Get fileds selected on combo box and return list"""
         selected = []
+
+        # get fileds from model with flag signal
         for i in range(self.model.rowCount()):
             field = self.model.item(i)
             if field.checkState() == 2:
                 selected.append(str(field.text()))
-        QMessageBox.critical(None, "Error", str([x for x in selected]))
+        # QMessageBox.critical(None, "Error", str([x for x in selected]))
         return selected
 
     def confirmButton(self):
         """Confirm selected data and populate local variables"""
         selectedLayerIndex = self.dlg.cbLayers.currentIndex()
         selectedLayer = self.layers[selectedLayerIndex]
-        field_names = self.selectGroups(selectedLayerIndex)
+        field_names = self.selectGroups()
 
         # populate track_id data
         id_name = self.dlg.cbId.currentText()
@@ -285,13 +290,18 @@ class Segreg:
         y_cord = [feat.geometry().centroid().asPoint().y() for feat in selectedLayer.getFeatures()]
         y_cord = np.reshape(y_cord, (len(y_cord), 1))
 
-        # populate groups data
+        # populate groups data based on selected list
         groups = []
-        for i in self.selectedFields:
+        for i in field_names:
             values = selectedLayer.getDoubleValues(i)[0]  # getDoubleValues for float
             group = [int(x) for x in values]
             groups.append(group)
         groups = np.asarray(groups).T
+
+        if len(groups) == 0:
+            QMessageBox.critical(None, "Error", 'No data selected!')
+            self.dlg.tabWidget.setTabEnabled(1, False)
+            return
 
         # concatenate values and populate attribute matrix
         data = np.concatenate((x_cord, y_cord, groups), axis=1)
@@ -305,8 +315,10 @@ class Segreg:
         self.n_location = self.attributeMatrix.shape[0]
         self.pop_sum = np.sum(self.pop, axis=1)
 
-        self.dlg.tabWidget.setTabEnabled(1, True)
-        self.iface.messageBar().pushMessage("Info", "Input saved", level=QgsMessageBar.INFO, duration=2)
+        # unlock measures tab and display confirmation if success
+        if self.attributeMatrix is not None:
+            self.dlg.tabWidget.setTabEnabled(1, True)
+            self.iface.messageBar().pushMessage("Info", "Input saved", level=QgsMessageBar.INFO, duration=2)
 
     def runIntensityButton(self):
         # set fixed IDs for radioButtons
@@ -590,7 +602,7 @@ class Segreg:
         with open("%s_global.txt" % path, "w") as f:
             f.write('Global dissimilarity: ' + str(self.global_dissimilarity))
             f.write('\nGlobal entropy: ' + str(self.global_entropy))
-            f.write('\nGlobal Index H: \n' + str(self.global_indexh))
+            f.write('\nGlobal Index H: ' + str(self.global_indexh))
             f.write('\nGlobal isolation/exposure: \n')
             f.write(str(self.global_exposure))
 
@@ -602,6 +614,11 @@ class Segreg:
 
     def run(self):
         """Run method to call dialog and connect interface with functions"""
+
+        # pin view on first tab for attributes selection
+        self.dlg.tabWidget.setCurrentIndex(0)
+
+        self.clearVariables()
 
         # populate layers list using a projected CRS
         self.addLayers()
@@ -618,7 +635,5 @@ class Segreg:
 
         # See if OK was pressed
         if result:
-            # Do something useful here - delete the line containing pass and
-            # substitute with your code.
-
-            self.dlg.dbClose.clicked.connect(self.clearVariables)
+            # clear variables at exit
+            pass
