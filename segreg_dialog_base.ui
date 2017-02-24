@@ -51,7 +51,7 @@
     <bool>true</bool>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>1</number>
    </property>
    <widget class="QWidget" name="tab_input">
     <attribute name="title">
@@ -405,7 +405,7 @@
        <x>11</x>
        <y>30</y>
        <width>390</width>
-       <height>271</height>
+       <height>253</height>
       </rect>
      </property>
      <property name="font">
@@ -422,7 +422,7 @@
       <property name="geometry">
        <rect>
         <x>15</x>
-        <y>225</y>
+        <y>206</y>
         <width>360</width>
         <height>33</height>
        </rect>
@@ -431,34 +431,11 @@
        <string>Compute measures</string>
       </property>
      </widget>
-     <widget class="QLabel" name="label_12">
-      <property name="geometry">
-       <rect>
-        <x>20</x>
-        <y>30</y>
-        <width>341</width>
-        <height>41</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>10</pointsize>
-        <weight>50</weight>
-        <bold>false</bold>
-       </font>
-      </property>
-      <property name="text">
-       <string>Important: Global variables are dependent of local version. Please check the corresponding local measure for the global one selected. Index H is dependent of Entropy.</string>
-      </property>
-      <property name="wordWrap">
-       <bool>true</bool>
-      </property>
-     </widget>
      <widget class="QGroupBox" name="gbLocal">
       <property name="geometry">
        <rect>
         <x>20</x>
-        <y>80</y>
+        <y>40</y>
         <width>161</width>
         <height>131</height>
        </rect>
@@ -554,7 +531,7 @@
       <property name="geometry">
        <rect>
         <x>210</x>
-        <y>80</y>
+        <y>40</y>
         <width>161</width>
         <height>131</height>
        </rect>
@@ -646,12 +623,30 @@
        </property>
       </widget>
      </widget>
+     <widget class="QPushButton" name="pbSelectAll">
+      <property name="geometry">
+       <rect>
+        <x>15</x>
+        <y>176</y>
+        <width>81</width>
+        <height>30</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Select all</string>
+      </property>
+     </widget>
     </widget>
     <widget class="QLabel" name="label_9">
      <property name="geometry">
       <rect>
-       <x>14</x>
-       <y>340</y>
+       <x>20</x>
+       <y>320</y>
        <width>161</width>
        <height>30</height>
       </rect>
@@ -670,8 +665,8 @@
     <widget class="QPushButton" name="pbOpenPath">
      <property name="geometry">
       <rect>
-       <x>310</x>
-       <y>380</y>
+       <x>294</x>
+       <y>361</y>
        <width>91</width>
        <height>31</height>
       </rect>
@@ -683,9 +678,9 @@
     <widget class="QLineEdit" name="leOutput">
      <property name="geometry">
       <rect>
-       <x>10</x>
-       <y>380</y>
-       <width>291</width>
+       <x>20</x>
+       <y>360</y>
+       <width>265</width>
        <height>30</height>
       </rect>
      </property>
@@ -693,9 +688,9 @@
     <widget class="QLabel" name="label_10">
      <property name="geometry">
       <rect>
-       <x>13</x>
-       <y>420</y>
-       <width>341</width>
+       <x>20</x>
+       <y>400</y>
+       <width>361</width>
        <height>41</height>
       </rect>
      </property>
@@ -707,7 +702,7 @@
       </font>
      </property>
      <property name="text">
-      <string>Note: A second file will be created in the same directory ending with &quot;_globals.txt&quot; containing the global results according to the measures selected.</string>
+      <string>Note: A second file will be created in the same directory ending with &quot;_global.txt&quot; containing the global results according to the measures selected.</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>

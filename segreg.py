@@ -173,6 +173,9 @@ class Segreg:
         # run measures from selected check boxes
         self.dlg.pbRunMeasures.clicked.connect(self.runMeasuresButton)
 
+        # select all measures
+        self.dlg.pbSelectAll.clicked.connect(self.selectAllMeasures)
+
         # run dialog to select and save output file
         self.dlg.leOutput.clear()
         self.dlg.pbOpenPath.clicked.connect(self.saveResults)
@@ -204,6 +207,7 @@ class Segreg:
         self.selectedFields = []
 
         # clear qt objects
+        self.dlg.leOutput.clear()
         self.model.clear()
         self.dlg.leBandwidht.clear()
         for button in self.dlg.gbLocal.findChildren(QCheckBox):
@@ -524,6 +528,13 @@ class Segreg:
         h_global = np.sum(h_local, axis=0)
         self.global_indexh = h_global
 
+    def selectAllMeasures(self):
+        """Select all check box on measures groups"""
+        for button in self.dlg.gbLocal.findChildren(QCheckBox):
+            button.setChecked(True)
+        for button in self.dlg.gbGlobal.findChildren(QCheckBox):
+            button.setChecked(True)
+
     def runMeasuresButton(self):
         """
         This function call the functions to compute local and global measures. It populates internals
@@ -621,11 +632,16 @@ class Segreg:
             names.append('indexh')
 
         output_labels = tuple([eval(x) for x in measures_computed])
-        computed_results = np.concatenate(output_labels, axis=1)
-        results_matrix = np.concatenate((self.track_id, self.attributeMatrix, computed_results), axis=1)
-        labels = str(', '.join(names))
-        measures_computed[:] = []
-        return results_matrix, labels
+        try:
+            computed_results = np.concatenate(output_labels, axis=1)
+        except:
+            QMessageBox.critical(None, "Error", 'No results data to save!')
+            raise
+        finally:
+            results_matrix = np.concatenate((self.track_id, self.attributeMatrix, computed_results), axis=1)
+            labels = str(', '.join(names))
+            measures_computed[:] = []
+            return results_matrix, labels
 
         # names = ['id','x','y']
         # for i in range(self.n_group):
