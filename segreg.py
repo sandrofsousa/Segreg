@@ -203,8 +203,13 @@ class Segreg:
         self.track_id = []
         self.selectedFields = []
 
+        # clear qt objects
         self.model.clear()
         self.dlg.leBandwidht.clear()
+        for button in self.dlg.gbLocal.findChildren(QCheckBox):
+            button.setChecked(False)
+        for button in self.dlg.gbGlobal.findChildren(QCheckBox):
+            button.setChecked(False)
 
         # clear results tables
         self.local_dissimilarity = []
@@ -548,8 +553,6 @@ class Segreg:
                 msg = "Please select and confirm the attributes at Input Parameters tab!"
                 QMessageBox.critical(None, "Error", msg)
 
-                # self.iface.messageBar().pushMessage("Warning", msg, level=QgsMessageBar.WARNING, duration=4)
-
     def joinResultsData(self):
         """ Function to join results on a unique matrix and assign names for columns"""
         names = ['id','x','y']
@@ -618,6 +621,7 @@ class Segreg:
         # pin view on first tab for attributes selection
         self.dlg.tabWidget.setCurrentIndex(0)
 
+        # clear variables at exit
         self.clearVariables()
 
         # populate layers list using a projected CRS
@@ -635,5 +639,5 @@ class Segreg:
 
         # See if OK was pressed
         if result:
-            # clear variables at exit
+            # exit
             pass
