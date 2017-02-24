@@ -276,6 +276,13 @@ class Segreg:
         # QMessageBox.critical(None, "Error", str([x for x in selected]))
         return selected
 
+    def checkSelectedGroups(self):
+        if self.dlg.tabWidget.currentIndex() == 1:
+            if len(self.pop) == 0:
+                self.dlg.tabWidget.setTabEnabled(1, False)
+                msg = "Please select and confirm the attributes at Input Parameters tab!"
+                QMessageBox.critical(None, "Error", msg)
+
     def confirmButton(self):
         """Confirm selected data and populate local variables"""
         selectedLayerIndex = self.dlg.cbLayers.currentIndex()
@@ -338,35 +345,6 @@ class Segreg:
         self.cal_localityMatrix(bw, weight)
         self.iface.messageBar().pushMessage("Info", "Matrix of shape %s computed" % str(self.locality.shape),
                                             level=QgsMessageBar.INFO, duration=4)
-
-    def runMeasuresButton(self):
-        """
-        This function call the functions to compute local and global measures. It populates internals
-        with lists holding the results for saving.
-        """
-        # call local and global dissimilarity measures
-        if self.dlg.diss_local.isChecked() is True:
-            self.cal_localDissimilarity()
-        if self.dlg.diss_global.isChecked() is True:
-            self.cal_globalDissimilarity()
-
-        # call local and global exposure/isolation measures
-        if self.dlg.expo_local.isChecked() is True:
-            self.cal_localExposure()
-        if self.dlg.expo_global.isChecked() is True:
-            self.cal_globalExposure()
-
-        # call local and global entropy measures
-        if self.dlg.entro_local.isChecked() is True:
-            self.cal_localEntropy()
-        if self.dlg.entro_global.isChecked() is True:
-            self.cal_globalEntropy()
-
-        # call local and global index H measures
-        if self.dlg.idxh_local.isChecked() is True:
-            self.cal_localIndexH()
-        if self.dlg.idxh_global.isChecked() is True:
-            self.cal_globalIndexH()
 
     def getWeight(self, distance, bandwidth, weightmethod=1):
         """
@@ -546,12 +524,68 @@ class Segreg:
         h_global = np.sum(h_local, axis=0)
         self.global_indexh = h_global
 
-    def checkSelectedGroups(self):
-        if self.dlg.tabWidget.currentIndex() == 1:
-            if len(self.pop) == 0:
-                self.dlg.tabWidget.setTabEnabled(1, False)
-                msg = "Please select and confirm the attributes at Input Parameters tab!"
-                QMessageBox.critical(None, "Error", msg)
+    def runMeasuresButton(self):
+        """
+        This function call the functions to compute local and global measures. It populates internals
+        with lists holding the results for saving.
+        """
+        # call local and global exposure/isolation measures
+        if self.dlg.expo_global.isChecked() is True:
+            self.cal_localExposure()
+            self.cal_globalExposure()
+        if self.dlg.expo_local.isChecked() is True and len(self.local_exposure) == 0:
+            self.cal_localExposure()
+
+        # call local and global dissimilarity measures
+        if self.dlg.diss_global.isChecked() is True:
+            self.cal_localDissimilarity()
+            self.cal_globalDissimilarity()
+        if self.dlg.diss_local.isChecked() is True and len(self.local_dissimilarity) == 0:
+            self.cal_localDissimilarity()
+
+        # call local and global entropy measures
+        if self.dlg.entro_global.isChecked() is True:
+            self.cal_localEntropy()
+            self.cal_globalEntropy()
+        if self.dlg.entro_local.isChecked() is True and len(self.local_entropy) == 0:
+            self.cal_localEntropy()
+
+        # call local and global index H measures
+        if self.dlg.idxh_global.isChecked() is True:
+            self.cal_localEntropy()
+            self.cal_globalEntropy()
+            self.cal_localIndexH()
+            self.cal_globalIndexH()
+        if self.dlg.idxh_local.isChecked() is True and len(self.local_indexh) == 0:
+            self.cal_localEntropy()
+            self.cal_globalEntropy()
+            self.cal_localIndexH()
+
+        QMessageBox.information(None, "Info", 'Measures computed successfully!')
+
+        # # call local and global dissimilarity measures
+        # if self.dlg.diss_local.isChecked() is True:
+        #     self.cal_localDissimilarity()
+        # if self.dlg.diss_global.isChecked() is True:
+        #     self.cal_globalDissimilarity()
+        #
+        # # call local and global exposure/isolation measures
+        # if self.dlg.expo_local.isChecked() is True:
+        #     self.cal_localExposure()
+        # if self.dlg.expo_global.isChecked() is True:
+        #     self.cal_globalExposure()
+        #
+        # # call local and global entropy measures
+        # if self.dlg.entro_local.isChecked() is True:
+        #     self.cal_localEntropy()
+        # if self.dlg.entro_global.isChecked() is True:
+        #     self.cal_globalEntropy()
+        #
+        # # call local and global index H measures
+        # if self.dlg.idxh_local.isChecked() is True:
+        #     self.cal_localIndexH()
+        # if self.dlg.idxh_global.isChecked() is True:
+        #     self.cal_globalIndexH()
 
     def joinResultsData(self):
         """ Function to join results on a unique matrix and assign names for columns"""
@@ -565,7 +599,7 @@ class Segreg:
             for i in range(self.n_group):
                 names.append('intens_' + str(i))
 
-        if len(self.local_exposure) != 0:
+        if self.dlg.expo_local.isChecked() is True:
             measures_computed.append('self.local_exposure')
             for i in range(self.n_group):
                 for j in range(self.n_group):
@@ -574,15 +608,15 @@ class Segreg:
                     else:
                         names.append('exp_' + str(i) + str(j))
 
-        if len (self.local_dissimilarity) != 0:
+        if self.dlg.diss_local.isChecked() is True:
             measures_computed.append('self.local_dissimilarity')
             names.append('dissimil')
 
-        if len (self.local_entropy) != 0:
+        if self.dlg.entro_local.isChecked() is True:
             measures_computed.append('self.local_entropy')
             names.append('entropy')
 
-        if len (self.local_indexh) != 0:
+        if self.dlg.idxh_local.isChecked() is True:
             measures_computed.append('self.local_indexh')
             names.append('indexh')
 
@@ -592,6 +626,44 @@ class Segreg:
         labels = str(', '.join(names))
         measures_computed[:] = []
         return results_matrix, labels
+
+        # names = ['id','x','y']
+        # for i in range(self.n_group):
+        #     names.append('group_' + str(i))
+        #
+        # measures_computed = []
+        # if len(self.locality) != 0:
+        #     measures_computed.append('self.locality')
+        #     for i in range(self.n_group):
+        #         names.append('intens_' + str(i))
+        #
+        # if len(self.local_exposure) != 0:
+        #     measures_computed.append('self.local_exposure')
+        #     for i in range(self.n_group):
+        #         for j in range(self.n_group):
+        #             if i == j:
+        #                 names.append('iso_' + str(i) + str(j))
+        #             else:
+        #                 names.append('exp_' + str(i) + str(j))
+        #
+        # if len (self.local_dissimilarity) != 0:
+        #     measures_computed.append('self.local_dissimilarity')
+        #     names.append('dissimil')
+        #
+        # if len (self.local_entropy) != 0:
+        #     measures_computed.append('self.local_entropy')
+        #     names.append('entropy')
+        #
+        # if len (self.local_indexh) != 0:
+        #     measures_computed.append('self.local_indexh')
+        #     names.append('indexh')
+        #
+        # output_labels = tuple([eval(x) for x in measures_computed])
+        # computed_results = np.concatenate(output_labels, axis=1)
+        # results_matrix = np.concatenate((self.track_id, self.attributeMatrix, computed_results), axis=1)
+        # labels = str(', '.join(names))
+        # measures_computed[:] = []
+        # return results_matrix, labels
 
     def saveResults(self):
         """ Function to save results to a local file."""
