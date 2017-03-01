@@ -337,18 +337,21 @@ class Segreg:
             self.iface.messageBar().pushMessage("Info", "Input saved", level=QgsMessageBar.INFO, duration=2)
 
     def runIntensityButton(self):
-        # set fixed IDs for radioButtons
-        self.dlg.bgWeight.setId(self.dlg.gauss, 1)
-        self.dlg.bgWeight.setId(self.dlg.bisquar, 2)
-        self.dlg.bgWeight.setId(self.dlg.mvwind, 3)
+        if not self.pop:
+            QMessageBox.critical(None, "Error", 'No data selected!')
+        else:
+            # set fixed IDs for radioButtons
+            self.dlg.bgWeight.setId(self.dlg.gauss, 1)
+            self.dlg.bgWeight.setId(self.dlg.bisquar, 2)
+            self.dlg.bgWeight.setId(self.dlg.mvwind, 3)
 
-        # set parameters to call locality matrix
-        weight = self.dlg.bgWeight.checkedId()
-        bw = int(self.dlg.leBandwidht.text())
+            # set parameters to call locality matrix
+            weight = self.dlg.bgWeight.checkedId()
+            bw = int(self.dlg.leBandwidht.text())
 
-        self.cal_localityMatrix(bw, weight)
-        self.iface.messageBar().pushMessage("Info", "Matrix of shape %s computed" % str(self.locality.shape),
-                                            level=QgsMessageBar.INFO, duration=4)
+            self.cal_localityMatrix(bw, weight)
+            self.iface.messageBar().pushMessage("Info", "Matrix of shape %s computed" % str(self.locality.shape),
+                                                level=QgsMessageBar.INFO, duration=4)
 
     def getWeight(self, distance, bandwidth, weightmethod=1):
         """
@@ -367,9 +370,9 @@ class Segreg:
             sel = np.where(distance > bandwidth)
             weight[sel[0]] = 0
         elif weightmethod == 3:
-            weight = 1
+            weight = (1 + (distance * 0))
             sel = np.where(distance > bandwidth)
-            weight[sel[0], :] = 0
+            weight[sel[0]] = 0
         else:
             raise Exception('Invalid weight method selected!')
         return weight
