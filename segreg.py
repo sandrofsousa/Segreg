@@ -233,13 +233,14 @@ class Segreg:
         # clear box
         self.dlg.cbLayers.clear()
 
-        self.layers = self.iface.legendInterface().layers()
+        layers_panel = self.iface.legendInterface().layers()
         layer_list = []
 
-        for layer in self.layers:
+        for layer in layers_panel:
             # Check if layer is geographic or projected and append projected only
             isgeographic = layer.crs().geographicFlag()
             if isgeographic is False:
+                self.layers.append(layer)
                 layer_list.append(layer.name())
             else:
                 continue
