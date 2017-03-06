@@ -295,7 +295,7 @@ class Segreg:
 
         # populate track_id data
         id_name = self.dlg.cbId.currentText()
-        id_values = selectedLayer.getValues(id_name)[0]  # getDoubleValues for float
+        id_values = selectedLayer.getValues(id_name)[0]
         id_values = [str(x) for x in id_values]
         self.track_id = np.asarray(id_values)
         self.track_id = self.track_id.reshape((len(id_values), 1))
@@ -310,7 +310,7 @@ class Segreg:
         groups = []
         for i in field_names:
             values = selectedLayer.getDoubleValues(i)[0]  # getDoubleValues for float
-            group = [int(x) for x in values]
+            group = [float(x) for x in values]
             groups.append(group)
         groups = np.asarray(groups).T
 
@@ -326,7 +326,7 @@ class Segreg:
         self.location = self.attributeMatrix[:, 0:2]
         self.location = self.location.astype('float')
         self.pop = self.attributeMatrix[:, 2:n]
-        self.pop[np.where(self.pop < 0)[0], np.where(self.pop < 0)[1]] = 0
+        self.pop[np.where(self.pop < 0)[0], np.where(self.pop < 0)[1]] = 0.0
         self.n_group = n - 2
         self.n_location = self.attributeMatrix.shape[0]
         self.pop_sum = np.sum(self.pop, axis=1)
@@ -690,6 +690,11 @@ class Segreg:
         self.dlg.leOutput.setText(filename)
         path = self.dlg.leOutput.text()
         result = self.joinResultsData()
+        # fmts = ["%g" for i in result[1].split()]
+        # fmts[0] = "%s"
+        # fmts = str(', '.join(fmts))
+        # QMessageBox.critical(None, "Error", str(result[0][1,1]))
+
         np.savetxt(path, result[0], header=result[1], delimiter=',', newline='\n', fmt="%s")
 
         # save global results to an alternate local file
