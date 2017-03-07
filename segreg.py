@@ -158,6 +158,9 @@ class Segreg:
             callback=self.run,
             parent=self.iface.mainWindow())
 
+        # clear variables at exit
+        self.clearVariables()
+
         # pin view on first tab for attributes selection
         self.dlg.tabWidget.connect(self.dlg.tabWidget, SIGNAL("currentChanged(int)"), self.checkSelectedGroups)
 
@@ -338,8 +341,8 @@ class Segreg:
             self.iface.messageBar().pushMessage("Info", "Input saved", level=QgsMessageBar.INFO, duration=2)
 
     def runIntensityButton(self):
-        if not self.pop:
-            QMessageBox.critical(None, "Error", 'No data selected!')
+        if not np.any(self.pop):
+            QMessageBox.critical(None, "Error", 'No group selected!')
         else:
             # set fixed IDs for radioButtons
             self.dlg.bgWeight.setId(self.dlg.gauss, 1)
@@ -691,6 +694,7 @@ class Segreg:
         self.dlg.leOutput.setText(filename)
         path = self.dlg.leOutput.text()
         result = self.joinResultsData()
+
         # fmts = ["%g" for i in result[1].split()]
         # fmts[0] = "%s"
         # fmts = str(', '.join(fmts))
@@ -718,7 +722,7 @@ class Segreg:
         # pin view on first tab for attributes selection
         self.dlg.tabWidget.setCurrentIndex(0)
 
-        # clear variables at exit
+        # # clear variables at exit
         self.clearVariables()
 
         # populate layers list using a projected CRS
