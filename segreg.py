@@ -581,30 +581,6 @@ class Segreg:
 
         QMessageBox.information(None, "Info", 'Measures computed successfully!')
 
-        # # call local and global dissimilarity measures
-        # if self.dlg.diss_local.isChecked() is True:
-        #     self.cal_localDissimilarity()
-        # if self.dlg.diss_global.isChecked() is True:
-        #     self.cal_globalDissimilarity()
-        #
-        # # call local and global exposure/isolation measures
-        # if self.dlg.expo_local.isChecked() is True:
-        #     self.cal_localExposure()
-        # if self.dlg.expo_global.isChecked() is True:
-        #     self.cal_globalExposure()
-        #
-        # # call local and global entropy measures
-        # if self.dlg.entro_local.isChecked() is True:
-        #     self.cal_localEntropy()
-        # if self.dlg.entro_global.isChecked() is True:
-        #     self.cal_globalEntropy()
-        #
-        # # call local and global index H measures
-        # if self.dlg.idxh_local.isChecked() is True:
-        #     self.cal_localIndexH()
-        # if self.dlg.idxh_global.isChecked() is True:
-        #     self.cal_globalIndexH()
-
     def joinResultsData(self):
         """ Function to join results on a unique matrix and assign names for columns"""
         names = ['id','x','y']
@@ -649,44 +625,6 @@ class Segreg:
             labels = str(', '.join(names))
             measures_computed[:] = []
             return results_matrix, labels
-
-        # names = ['id','x','y']
-        # for i in range(self.n_group):
-        #     names.append('group_' + str(i))
-        #
-        # measures_computed = []
-        # if len(self.locality) != 0:
-        #     measures_computed.append('self.locality')
-        #     for i in range(self.n_group):
-        #         names.append('intens_' + str(i))
-        #
-        # if len(self.local_exposure) != 0:
-        #     measures_computed.append('self.local_exposure')
-        #     for i in range(self.n_group):
-        #         for j in range(self.n_group):
-        #             if i == j:
-        #                 names.append('iso_' + str(i) + str(j))
-        #             else:
-        #                 names.append('exp_' + str(i) + str(j))
-        #
-        # if len (self.local_dissimilarity) != 0:
-        #     measures_computed.append('self.local_dissimilarity')
-        #     names.append('dissimil')
-        #
-        # if len (self.local_entropy) != 0:
-        #     measures_computed.append('self.local_entropy')
-        #     names.append('entropy')
-        #
-        # if len (self.local_indexh) != 0:
-        #     measures_computed.append('self.local_indexh')
-        #     names.append('indexh')
-        #
-        # output_labels = tuple([eval(x) for x in measures_computed])
-        # computed_results = np.concatenate(output_labels, axis=1)
-        # results_matrix = np.concatenate((self.track_id, self.attributeMatrix, computed_results), axis=1)
-        # labels = str(', '.join(names))
-        # measures_computed[:] = []
-        # return results_matrix, labels
 
     def saveResults(self):
         """ Function to save results to a local file."""
