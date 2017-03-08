@@ -617,14 +617,17 @@ class Segreg:
         output_labels = tuple([eval(x) for x in measures_computed])
         try:
             computed_results = np.concatenate(output_labels, axis=1)
-        except:
-            QMessageBox.critical(None, "Error", 'No results data to save!')
-            raise
-        finally:
             results_matrix = np.concatenate((self.track_id, self.attributeMatrix, computed_results), axis=1)
             labels = str(', '.join(names))
             measures_computed[:] = []
             return results_matrix, labels
+        except ValueError:
+            results_matrix = np.concatenate((self.track_id, self.attributeMatrix), axis=1)
+            labels = str(', '.join(names))
+            return results_matrix, labels
+        except:
+            QMessageBox.critical(None, "Error", 'Could not join result data!')
+            raise
 
     def saveResults(self):
         """ Function to save results to a local file."""
@@ -680,3 +683,9 @@ class Segreg:
         if result:
             # exit
             pass
+
+# TODO Error when saving only global results, check try function
+# TODO Interface losing setup between systems
+# TODO population groups with only 2 decimals
+# TODO implement function to add shapefile to canvas
+# TODO Bug with H index
