@@ -642,37 +642,58 @@ class Segreg:
         # pathName = path[:-3] + 'shp'
         data = result[0][:, (3 + self.n_group):]
         # labels = str(', '.join(result[1][(3 + self.n_group):]))
-        labels = result[1][(3 + self.n_group):]
+        # labels = result[1][(3 + self.n_group):]
+        labels = ['G7_W', 'G9_W']
 
         # create layer copying data from sourceLayer
         newLayer = QgsVectorLayer(sourceGeometryType + '?crs='+sourceCRS, name, "memory")
         provider = newLayer.dataProvider()
         attr = sourceLayer.dataProvider().fields().toList()
+        attr.extend([QgsField(label, QVariant.Double) for label in labels])
         provider.addAttributes(attr)
         newLayer.updateFields()
         provider.addFeatures(sourceFeats)
 
-        # add fields from measures selected for calculation
-        provider.addAttributes([QgsField(label, QVariant.Double) for label in labels])
-        newLayer.updateFields()
-        feat = QgsFeature()
-        feat.setAttributes(data.tolist())
-        provider.addFeatures([feat])
+        QgsMapLayerRegistry.instance().addMapLayer(newLayer)
 
-        # # add a feature to layer
-        # newLayer.startEditing()
-        # feat = QgsFeature()
-        # feat.setAttributes(data.tolist())
-        # provider.addFeatures([feat])
-        # newLayer.updateExtents()
-        # newLayer.commitChanges()
+
+        # QMessageBox.critical(None, "Info", str([f.name() for f in newLayer.pendingFields()]))
+        # QMessageBox.critical(None, "Info", str(attr))
+
+        # for idxfeat, feat in enumerate(newLayer.getFeatures()):
+        #     featid = int(feat.id())
+        #     for idxlabel, label in enumerate(labels):
+        #         # idxfield = provider.fieldNameMap()[label]
+        #         val = float(data[idxfeat, idxlabel])
+        #         newLayer.startEditing()
+        #         feat[label] = val
+        #         newLayer.updateFeature(feat)
+        #         # newLayer.changeAttributeValue(featid, idxfield, val)
+        #         newLayer.commitChanges()
+
+        # add results from measures selected for calculation
+        for idxfeat, feat in enumerate(newLayer.getFeatures()):
+            featid = int(feat.id())
+            for idxlabel, label in enumerate(labels):
+                idxfield = int(provider.fieldNameMap()[label])
+                val = float(data[idxfeat, idxlabel])
+                provider.changeAttributeValues({featid : {idxfield : val}})
+
+        # # add results from measures selected for calculation
+        # for idxfeat, feat in enumerate(newLayer.getFeatures()):
+        #     for idxlabel, label in enumerate(labels):
+        #         provider.changeAttributeValues({feat.id() : {provider.fieldNameMap()[label] : data[idxfeat, idxlabel]}})
+
+        # for idxlabel, label in enumerate(labels):
+            # dataSlice = data[:,idxlabel]
+            # for idxfeat, feat in enumerate(newLayer.getFeatures()):
+            #     provider.changeAttributeValues({feat.id() : {provider.fieldNameMap()[label] : dataSlice[idxfeat]}})
 
         # QgsVectorFileWriter(path, u'UTF-8', newLayer.fields(), QGis.WKBPolygon, newLayer.csr())
 
         # add layer to canvas
-        QgsMapLayerRegistry.instance().addMapLayer(newLayer)
+        # QgsMapLayerRegistry.instance().addMapLayer(newLayer)
         # QMessageBox.critical(None, "Info", str(QgsMapLayerRegistry.instance().count()))
-        QMessageBox.critical(None, "Info", str((data.shape, labels)))
 
 
     def saveResults(self):
@@ -693,10 +714,11 @@ class Segreg:
 
         np.savetxt(path, result[0], header=labels, delimiter=',', newline='\n', fmt="%s")
 
-        self.addShapeToCanvas(result, path)
+        if self.dlg.addToCanvas.isChecked() is True:
+            self.addShapeToCanvas(result, path)
 
         # save global results to a second local file
-        with open("%s_global.txt" % path, "w") as f:
+        with open("%s_global.csv" % path, "w") as f:
             f.write('Global dissimilarity: ' + str(self.global_dissimilarity))
             f.write('\nGlobal entropy: ' + str(self.global_entropy))
             f.write('\nGlobal Index H: ' + str(self.global_indexh))
@@ -737,6 +759,5 @@ class Segreg:
             pass
 
 # TODO Interface losing setup between systems
-# TODO population groups with only 2 decimals
 # TODO implement function to add shapefile to canvas
 # TODO Bug with H index
