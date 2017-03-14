@@ -639,23 +639,28 @@ class Segreg:
 
         # data for new layer
         name = QFileInfo(path).baseName()
-        # pathName = path[:-3] + 'shp'
         data = result[0][:, (3 + self.n_group):]
-        # labels = str(', '.join(result[1][(3 + self.n_group):]))
-        # labels = result[1][(3 + self.n_group):]
-        labels = ['G7_W', 'G9_W']
+        labels = result[1][(3 + self.n_group):]
 
         # create layer copying data from sourceLayer
         newLayer = QgsVectorLayer(sourceGeometryType + '?crs='+sourceCRS, name, "memory")
         provider = newLayer.dataProvider()
         attr = sourceLayer.dataProvider().fields().toList()
         attr.extend([QgsField(label, QVariant.Double) for label in labels])
+        provider.addFeatures(sourceFeats)
         provider.addAttributes(attr)
         newLayer.updateFields()
-        provider.addFeatures(sourceFeats)
 
+        # add results from measures selected for calculation
+        for idxfeat, feat in enumerate(newLayer.getFeatures()):
+            featid = int(feat.id())
+            for idxlabel, label in enumerate(labels):
+                idxfield = int(provider.fieldNameMap()[label])
+                val = float(data[idxfeat, idxlabel])
+                provider.changeAttributeValues({featid : {idxfield : val}})
+
+        # add new layer to canvas        
         QgsMapLayerRegistry.instance().addMapLayer(newLayer)
-
 
         # QMessageBox.critical(None, "Info", str([f.name() for f in newLayer.pendingFields()]))
         # QMessageBox.critical(None, "Info", str(attr))
@@ -670,14 +675,6 @@ class Segreg:
         #         newLayer.updateFeature(feat)
         #         # newLayer.changeAttributeValue(featid, idxfield, val)
         #         newLayer.commitChanges()
-
-        # add results from measures selected for calculation
-        for idxfeat, feat in enumerate(newLayer.getFeatures()):
-            featid = int(feat.id())
-            for idxlabel, label in enumerate(labels):
-                idxfield = int(provider.fieldNameMap()[label])
-                val = float(data[idxfeat, idxlabel])
-                provider.changeAttributeValues({featid : {idxfield : val}})
 
         # # add results from measures selected for calculation
         # for idxfeat, feat in enumerate(newLayer.getFeatures()):
@@ -711,9 +708,9 @@ class Segreg:
         # fi = str(QFileInfo(path).baseName())
         # QMessageBox.critical(None, "Error", str(fi))
 
-
         np.savetxt(path, result[0], header=labels, delimiter=',', newline='\n', fmt="%s")
 
+        # add result to canvas as shape file if requested
         if self.dlg.addToCanvas.isChecked() is True:
             self.addShapeToCanvas(result, path)
 
