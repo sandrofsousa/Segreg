@@ -481,7 +481,7 @@ class Segreg:
         if len(self.locality) == 0:
             proportion = np.asarray(self.pop / self.pop_sum)
         else:
-            proportion = np.asarray(self.locality / np.sum(self.locality))
+            proportion = np.asarray(self.locality / self.pop_sum)
         entropy = proportion * np.log(1 / proportion)
         entropy[np.isnan(entropy)] = 0
         entropy[np.isinf(entropy)] = 0
@@ -499,7 +499,7 @@ class Segreg:
             pop_total = np.sum(self.pop_sum)
             prop = np.asarray(np.sum(self.pop, axis=0))[0]
         else:
-            pop_total = np.sum(self.locality)
+            pop_total = np.sum(self.pop_sum)
             prop = np.asarray(np.sum(self.locality, axis=0))
         for group in prop:
             group_idx = group / pop_total * np.log(1 / (group / pop_total))
@@ -520,11 +520,11 @@ class Segreg:
         if len(self.locality) == 0:
             et = np.asarray(global_entropy * np.sum(self.pop_sum))
             eei = np.asarray(global_entropy - local_entropy)
-            h_local = eei * np.asarray(self.pop_sum) / et
+            h_local = np.asarray(self.pop_sum) * eei / et
         else:
             et = np.asarray(global_entropy * np.sum(self.locality))
             eei = np.asarray(global_entropy - local_entropy)
-            h_local = eei * np.sum(self.locality) / et
+            h_local = np.asarray(self.pop_sum) * eei / et
         self.local_indexh = h_local
 
     def cal_globalIndexH(self):
@@ -659,7 +659,7 @@ class Segreg:
                 val = float(data[idxfeat, idxlabel])
                 provider.changeAttributeValues({featid : {idxfield : val}})
 
-        # add new layer to canvas        
+        # add new layer to canvas
         QgsMapLayerRegistry.instance().addMapLayer(newLayer)
 
         # QMessageBox.critical(None, "Info", str([f.name() for f in newLayer.pendingFields()]))
@@ -692,7 +692,6 @@ class Segreg:
         # QgsMapLayerRegistry.instance().addMapLayer(newLayer)
         # QMessageBox.critical(None, "Info", str(QgsMapLayerRegistry.instance().count()))
 
-
     def saveResults(self):
         """ Function to save results to a local file."""
         filename = QFileDialog.getSaveFileName(self.dlg, "Select output file ", "", "*.csv")
@@ -701,18 +700,15 @@ class Segreg:
         result = self.joinResultsData()
         labels = str(', '.join(result[1]))
 
-        # fmts = ["%g" for i in result[1].split()]
-        # fmts[0] = "%s"
-        # fmts = str(', '.join(fmts))
-        # QMessageBox.critical(None, "Error", str(result[0][1,1]))
-        # fi = str(QFileInfo(path).baseName())
-        # QMessageBox.critical(None, "Error", str(fi))
-
         np.savetxt(path, result[0], header=labels, delimiter=',', newline='\n', fmt="%s")
 
         # add result to canvas as shape file if requested
         if self.dlg.addToCanvas.isChecked() is True:
-            self.addShapeToCanvas(result, path)
+            try:
+                self.addShapeToCanvas(result, path)
+            except:
+                QMessageBox.critical(None, "Error", "Could not create shape!" )
+                return
 
         # save global results to a second local file
         with open("%s_global.csv" % path, "w") as f:
@@ -754,7 +750,3 @@ class Segreg:
         if result:
             # exit
             pass
-
-# TODO Interface losing setup between systems
-# TODO implement function to add shapefile to canvas
-# TODO Bug with H index
