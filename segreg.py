@@ -70,11 +70,10 @@ class Segreg:
         self.toolbar.setObjectName(u'Segreg')
 
         # Other initializations
-        self.layers = []                   # Store layers loaded (non geographical)
         self.lvGroups = QListView()
         self.model = QStandardItemModel(self.dlg.lvGroups)
         self.lvGroups.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        self.confirmedLayerIndex = 0
+        self.confirmedLayerName = None
 
         # Segregation measures attributes
         self.attributeMatrix = np.matrix([])    # attributes matrix full size - all columns
@@ -163,12 +162,10 @@ class Segreg:
         self.clearVariables()
 
         # pin view on first tab for attributes selection
-        # self.dlg.tabWidget.connect(self.dlg.tabWidget, SIGNAL("currentChanged(int)"), self.checkSelectedGroups)
         self.dlg.tabWidget.currentChanged.connect(self.checkSelectedGroups)
 
         # initialize dialog loop to add attributes for display
         self.dlg.cbLayers.currentIndexChanged.connect(self.addLayerAttributes)
-        # QMessageBox.critical(None, "Error", str(self.dlg.cbLayers.currentIndexChanged["const QString&"]))
 
         # save selected values from user and populate internals
         self.dlg.pbConfirm.clicked.connect(self.confirmButton)
@@ -237,16 +234,14 @@ class Segreg:
         This function add layers from canvas to check box. It only includes non geographic layers.
         This is due to a restriction at scipy funtion CDIST to calculate distance the matrix.
         """
-        # clear box and refresh canvas
+        # clear combo box
         self.dlg.cbLayers.clear()
-        # self.iface.mapCanvas().refresh()
-        layer_list = []
 
+        layer_list = []
         for layer in QgsMapLayerRegistry.instance().mapLayers().values():
             # Check if layer is geographic or projected and append projected only
             isgeographic = layer.crs().geographicFlag()
             if isgeographic is False:
-                # self.layers.append(layer)
                 layer_list.append(layer.name())
             else:
                 continue
@@ -261,26 +256,27 @@ class Segreg:
         # clear list
         self.dlg.cbId.clear()
         self.model.clear()
-        selectedLayer = self.layers[layer_index]
-        # selectedLayer = self.dlg.cbLayers.currentText()
-        # l_index = layer.name()self.layers
+        layerName = self.dlg.cbLayers.currentText()
+        try:
+            selectedLayer = QgsMapLayerRegistry.instance().mapLayersByName(layerName)[0]
+            fields = []
+            # get attributes from layer
+            for i in selectedLayer.pendingFields():
+                item = QStandardItem(i.name())
+                item.setCheckable(True)
+                fields.append(i.name())
+                self.model.appendRow(item)
 
-        fields = []
-        # get attributes from layer
-        for i in selectedLayer.pendingFields():
-            item = QStandardItem(i.name())
-            item.setCheckable(True)
-            fields.append(i.name())
-            self.model.appendRow(item)
-
-        # Update id and lwGroups combo boxes with fields
-        self.dlg.cbId.addItems(fields)
-        self.dlg.lvGroups.setModel(self.model)
+            # Update id and lvGroups combo boxes with fields
+            self.dlg.cbId.addItems(fields)
+            self.dlg.lvGroups.setModel(self.model)
+        except:
+            return
 
     def selectGroups(self):
         """Get fields selected on combo box and return list"""
         selected = []
-        # get fileds from model with flag signal
+        # get fields from model with flag signal
         for i in range(self.model.rowCount()):
             field = self.model.item(i)
             if field.checkState() == 2:
@@ -297,10 +293,12 @@ class Segreg:
 
     def confirmButton(self):
         """Populate local variables with selected fields"""
-        selectedLayerIndex = self.dlg.cbLayers.currentIndex()
-        selectedLayer = self.layers[selectedLayerIndex]
+        # get layer and fields from combo box items
+        layerName = self.dlg.cbLayers.currentText()
+        selectedLayer = QgsMapLayerRegistry.instance().mapLayersByName(layerName)[0]
         field_names = self.selectGroups()
-        self.confirmedLayerIndex = selectedLayerIndex
+        # to be used later on saving results as shapefile
+        self.confirmedLayerName = layerName
 
         # populate track_id data
         id_name = self.dlg.cbId.currentText()
@@ -323,6 +321,7 @@ class Segreg:
             groups.append(group)
         groups = np.asarray(groups).T
 
+        # check if fields were selected
         if len(groups) == 0:
             QMessageBox.critical(None, "Error", 'No data selected!')
             self.dlg.tabWidget.setTabEnabled(1, False)
@@ -350,7 +349,7 @@ class Segreg:
         if not np.any(self.pop):
             QMessageBox.critical(None, "Error", 'No group selected!')
         else:
-            # set fixed IDs for radioButtons
+            # set fixed IDs for radioButtons according to weightmethod
             self.dlg.bgWeight.setId(self.dlg.gauss, 1)
             self.dlg.bgWeight.setId(self.dlg.bisquar, 2)
             self.dlg.bgWeight.setId(self.dlg.mvwind, 3)
@@ -542,7 +541,7 @@ class Segreg:
         self.global_indexh = h_global
 
     def selectAllMeasures(self):
-        """Select all check box on measures groups"""
+        """Select all check boxes on measures groups"""
         for button in self.dlg.gbLocal.findChildren(QCheckBox):
             button.setChecked(True)
         for button in self.dlg.gbGlobal.findChildren(QCheckBox):
@@ -550,8 +549,8 @@ class Segreg:
 
     def runMeasuresButton(self):
         """
-        This function call the functions to compute local and global measures. It populates internals
-        with lists holding the results for saving.
+        Call the functions to compute local and global measures. It populates internals
+        with lists storing the results for later save.
         """
         # call local and global exposure/isolation measures
         if self.dlg.expo_global.isChecked() is True:
@@ -636,17 +635,17 @@ class Segreg:
     def addShapeToCanvas(self, result, path):
         """Function to add results to Canvas as a shape file"""
         # get data from layer confirmed on groups selection
-        sourceLayer = self.layers[self.confirmedLayerIndex]
+        sourceLayer = QgsMapLayerRegistry.instance().mapLayersByName(self.confirmedLayerName)[0]
         sourceFeats = [feat for feat in sourceLayer.getFeatures()]
         sourceGeometryType = ['Point','Line','Polygon'][sourceLayer.geometryType()]
         sourceCRS = sourceLayer.crs().authid()
 
-        # data for new layer
+        # data from results for the new layer
         name = QFileInfo(path).baseName()
         data = result[0][:, (3 + self.n_group):]
         labels = result[1][(3 + self.n_group):]
 
-        # create layer copying data from sourceLayer
+        # create new layer copying data from source and extend fields
         newLayer = QgsVectorLayer(sourceGeometryType + '?crs='+sourceCRS, name, "memory")
         provider = newLayer.dataProvider()
         attr = sourceLayer.dataProvider().fields().toList()
@@ -674,6 +673,7 @@ class Segreg:
         result = self.joinResultsData()
         labels = str(', '.join(result[1]))
 
+        # save local measures results on a csv file
         np.savetxt(path, result[0], header=labels, delimiter=',', newline='\n', fmt="%s")
 
         # add result to canvas as shape file if requested
@@ -724,5 +724,3 @@ class Segreg:
         if result:
             # exit
             pass
-
-#TODO changing order of layers of making the data being populated with previous
