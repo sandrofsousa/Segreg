@@ -163,10 +163,12 @@ class Segreg:
         self.clearVariables()
 
         # pin view on first tab for attributes selection
-        self.dlg.tabWidget.connect(self.dlg.tabWidget, SIGNAL("currentChanged(int)"), self.checkSelectedGroups)
+        # self.dlg.tabWidget.connect(self.dlg.tabWidget, SIGNAL("currentChanged(int)"), self.checkSelectedGroups)
+        self.dlg.tabWidget.currentChanged.connect(self.checkSelectedGroups)
 
         # initialize dialog loop to add attributes for display
-        self.dlg.cbLayers.currentIndexChanged["int"].connect(self.addLayerAttributes)
+        self.dlg.cbLayers.currentIndexChanged.connect(self.addLayerAttributes)
+        # QMessageBox.critical(None, "Error", str(self.dlg.cbLayers.currentIndexChanged["const QString&"]))
 
         # save selected values from user and populate internals
         self.dlg.pbConfirm.clicked.connect(self.confirmButton)
@@ -237,21 +239,21 @@ class Segreg:
         """
         # clear box and refresh canvas
         self.dlg.cbLayers.clear()
-        self.iface.mapCanvas().refresh()
+        # self.iface.mapCanvas().refresh()
         layer_list = []
 
-        for layer in self.iface.legendInterface().layers():
+        for layer in QgsMapLayerRegistry.instance().mapLayers().values():
             # Check if layer is geographic or projected and append projected only
             isgeographic = layer.crs().geographicFlag()
             if isgeographic is False:
-                self.layers.append(layer)
+                # self.layers.append(layer)
                 layer_list.append(layer.name())
             else:
                 continue
         # update combo box with layers
         self.dlg.cbLayers.addItems(layer_list)
 
-    def addLayerAttributes(self, layer_index):
+    def addLayerAttributes(self):
         """
         Populates ID and attributes from layer for selection.
         :param layer_index: index of current selected layer
@@ -260,6 +262,8 @@ class Segreg:
         self.dlg.cbId.clear()
         self.model.clear()
         selectedLayer = self.layers[layer_index]
+        # selectedLayer = self.dlg.cbLayers.currentText()
+        # l_index = layer.name()self.layers
 
         fields = []
         # get attributes from layer
@@ -281,7 +285,6 @@ class Segreg:
             field = self.model.item(i)
             if field.checkState() == 2:
                 selected.append(str(field.text()))
-        # QMessageBox.critical(None, "Error", str([x for x in selected]))
         return selected
 
     def checkSelectedGroups(self):
@@ -701,7 +704,7 @@ class Segreg:
         # pin view on first tab for attributes selection
         self.dlg.tabWidget.setCurrentIndex(0)
 
-        # # clear variables at exit
+        # clear variables at exit
         self.clearVariables()
 
         # populate layers list using a projected CRS
@@ -710,7 +713,7 @@ class Segreg:
         # show the dialog
         self.dlg.show()
 
-        if not self.layers:
+        if self.dlg.cbLayers.count() == 0:
             QMessageBox.critical(None, "Error", 'No layer found!')
             return
 
