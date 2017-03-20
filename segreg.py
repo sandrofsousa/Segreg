@@ -159,7 +159,7 @@ class Segreg:
             callback=self.run,
             parent=self.iface.mainWindow())
 
-        # clear variables at exit
+        # clear variables at start
         self.clearVariables()
 
         # pin view on first tab for attributes selection
@@ -235,14 +235,12 @@ class Segreg:
         This function add layers from canvas to check box. It only includes non geographic layers.
         This is due to a restriction at scipy funtion CDIST to calculate distance the matrix.
         """
-        # clear box
+        # clear box and refresh canvas
         self.dlg.cbLayers.clear()
-
         self.iface.mapCanvas().refresh()
-        layers_panel = self.iface.legendInterface().layers()
         layer_list = []
 
-        for layer in layers_panel:
+        for layer in self.iface.legendInterface().layers():
             # Check if layer is geographic or projected and append projected only
             isgeographic = layer.crs().geographicFlag()
             if isgeographic is False:
