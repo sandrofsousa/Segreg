@@ -667,36 +667,39 @@ class Segreg:
 
     def saveResults(self):
         """ Function to save results to a local file."""
-        filename = QFileDialog.getSaveFileName(self.dlg, "Select output file ", "", "*.csv")
-        self.dlg.leOutput.setText(filename)
-        path = self.dlg.leOutput.text()
-        result = self.joinResultsData()
-        labels = str(', '.join(result[1]))
+        try:
+            filename = QFileDialog.getSaveFileName(self.dlg, "Select output file ", "", "*.csv")
+            self.dlg.leOutput.setText(filename)
+            path = self.dlg.leOutput.text()
+            result = self.joinResultsData()
+            labels = str(', '.join(result[1]))
 
-        # save local measures results on a csv file
-        np.savetxt(path, result[0], header=labels, delimiter=',', newline='\n', fmt="%s")
+            # save local measures results on a csv file
+            np.savetxt(path, result[0], header=labels, delimiter=',', newline='\n', fmt="%s")
 
-        # add result to canvas as shape file if requested
-        if self.dlg.addToCanvas.isChecked() is True:
-            try:
-                self.addShapeToCanvas(result, path)
-            except:
-                QMessageBox.critical(None, "Error", "Could not create shape!" )
-                return
+            # add result to canvas as shape file if requested
+            if self.dlg.addToCanvas.isChecked() is True:
+                try:
+                    self.addShapeToCanvas(result, path)
+                except:
+                    QMessageBox.critical(None, "Error", "Could not create shape!" )
+                    return
 
-        # save global results to a second local file
-        with open("%s_global.csv" % path, "w") as f:
-            f.write('Global dissimilarity: ' + str(self.global_dissimilarity))
-            f.write('\nGlobal entropy: ' + str(self.global_entropy))
-            f.write('\nGlobal Index H: ' + str(self.global_indexh))
-            f.write('\nGlobal isolation/exposure: \n')
-            f.write(str(self.global_exposure))
+            # save global results to a second local file
+            with open("%s_global.csv" % path, "w") as f:
+                f.write('Global dissimilarity: ' + str(self.global_dissimilarity))
+                f.write('\nGlobal entropy: ' + str(self.global_entropy))
+                f.write('\nGlobal Index H: ' + str(self.global_indexh))
+                f.write('\nGlobal isolation/exposure: \n')
+                f.write(str(self.global_exposure))
 
-        # clear local variables after save
-        self.local_dissimilarity = []
-        self.local_exposure = []
-        self.local_entropy = []
-        self.local_indexh = []
+            # clear local variables after save
+            self.local_dissimilarity = []
+            self.local_exposure = []
+            self.local_entropy = []
+            self.local_indexh = []
+        except:
+            return
 
     def run(self):
         """Run method to call dialog and connect interface with functions"""
