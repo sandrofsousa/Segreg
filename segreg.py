@@ -209,6 +209,7 @@ class Segreg:
         self.n_group = 0
         self.track_id = []
         self.selectedFields = []
+        self.layers = []
 
         # clear qt objects
         self.dlg.leOutput.clear()
@@ -237,6 +238,7 @@ class Segreg:
         # clear box
         self.dlg.cbLayers.clear()
 
+        self.iface.mapCanvas().refresh()
         layers_panel = self.iface.legendInterface().layers()
         layer_list = []
 
@@ -253,7 +255,7 @@ class Segreg:
 
     def addLayerAttributes(self, layer_index):
         """
-        This function populates ID and attributes from layer for selection.
+        Populates ID and attributes from layer for selection.
         :param layer_index: index of current selected layer
         """
         # clear list
@@ -274,9 +276,8 @@ class Segreg:
         self.dlg.lvGroups.setModel(self.model)
 
     def selectGroups(self):
-        """Get fileds selected on combo box and return list"""
+        """Get fields selected on combo box and return list"""
         selected = []
-
         # get fileds from model with flag signal
         for i in range(self.model.rowCount()):
             field = self.model.item(i)
@@ -286,6 +287,7 @@ class Segreg:
         return selected
 
     def checkSelectedGroups(self):
+        """Check if groups were selected and confirmed before moving to measures tab"""
         if self.dlg.tabWidget.currentIndex() == 1:
             if len(self.pop) == 0:
                 self.dlg.tabWidget.setTabEnabled(1, False)
@@ -293,7 +295,7 @@ class Segreg:
                 QMessageBox.critical(None, "Error", msg)
 
     def confirmButton(self):
-        """Confirm selected data and populate local variables"""
+        """Populate local variables with selected fields"""
         selectedLayerIndex = self.dlg.cbLayers.currentIndex()
         selectedLayer = self.layers[selectedLayerIndex]
         field_names = self.selectGroups()
@@ -343,6 +345,7 @@ class Segreg:
             self.iface.messageBar().pushMessage("Info", "Input saved", level=QgsMessageBar.INFO, duration=2)
 
     def runIntensityButton(self):
+        """Run population intensity for selected bandwidth and weight method"""
         if not np.any(self.pop):
             QMessageBox.critical(None, "Error", 'No group selected!')
         else:
@@ -662,36 +665,6 @@ class Segreg:
         # add new layer to canvas
         QgsMapLayerRegistry.instance().addMapLayer(newLayer)
 
-        # QMessageBox.critical(None, "Info", str([f.name() for f in newLayer.pendingFields()]))
-        # QMessageBox.critical(None, "Info", str(attr))
-
-        # for idxfeat, feat in enumerate(newLayer.getFeatures()):
-        #     featid = int(feat.id())
-        #     for idxlabel, label in enumerate(labels):
-        #         # idxfield = provider.fieldNameMap()[label]
-        #         val = float(data[idxfeat, idxlabel])
-        #         newLayer.startEditing()
-        #         feat[label] = val
-        #         newLayer.updateFeature(feat)
-        #         # newLayer.changeAttributeValue(featid, idxfield, val)
-        #         newLayer.commitChanges()
-
-        # # add results from measures selected for calculation
-        # for idxfeat, feat in enumerate(newLayer.getFeatures()):
-        #     for idxlabel, label in enumerate(labels):
-        #         provider.changeAttributeValues({feat.id() : {provider.fieldNameMap()[label] : data[idxfeat, idxlabel]}})
-
-        # for idxlabel, label in enumerate(labels):
-            # dataSlice = data[:,idxlabel]
-            # for idxfeat, feat in enumerate(newLayer.getFeatures()):
-            #     provider.changeAttributeValues({feat.id() : {provider.fieldNameMap()[label] : dataSlice[idxfeat]}})
-
-        # QgsVectorFileWriter(path, u'UTF-8', newLayer.fields(), QGis.WKBPolygon, newLayer.csr())
-
-        # add layer to canvas
-        # QgsMapLayerRegistry.instance().addMapLayer(newLayer)
-        # QMessageBox.critical(None, "Info", str(QgsMapLayerRegistry.instance().count()))
-
     def saveResults(self):
         """ Function to save results to a local file."""
         filename = QFileDialog.getSaveFileName(self.dlg, "Select output file ", "", "*.csv")
@@ -750,3 +723,5 @@ class Segreg:
         if result:
             # exit
             pass
+
+#TODO changing order of layers of making the data being populated with previous
