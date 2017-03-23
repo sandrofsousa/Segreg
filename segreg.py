@@ -74,6 +74,7 @@ class Segreg:
         self.model = QStandardItemModel(self.dlg.lvGroups)
         self.lvGroups.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.confirmedLayerName = None
+        self.dlg.plainTextEdit.setReadOnly(True)
 
         # Segregation measures attributes
         self.attributeMatrix = np.matrix([])    # attributes matrix full size - all columns
@@ -668,6 +669,7 @@ class Segreg:
     def saveResults(self):
         """ Function to save results to a local file."""
         try:
+
             filename = QFileDialog.getSaveFileName(self.dlg, "Select output file ", "", "*.csv")
             self.dlg.leOutput.setText(filename)
             path = self.dlg.leOutput.text()

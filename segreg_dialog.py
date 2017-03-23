@@ -34,8 +34,4 @@ class SegregDialog(QtGui.QDialog, FORM_CLASS):
         """Constructor."""
         super(SegregDialog, self).__init__(parent)
         # Set up the user interface from Designer.
-        # After setupUI you can access any designer object by doing
-        # self.<objectname>, and you can use autoconnect slots - see
-        # http://qt-project.org/doc/qt-4.8/designer-using-a-ui-file.html
-        # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
