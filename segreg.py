@@ -162,7 +162,7 @@ class Segreg:
         # clear variables at start
         self.clearVariables()
 
-        # pin view on first tab for attributes selection
+        # check if attributes were selected if change tab
         self.dlg.tabWidget.currentChanged.connect(self.checkSelectedGroups)
 
         # initialize dialog loop to add attributes for display
@@ -373,7 +373,7 @@ class Segreg:
 
     def getWeight(self, distance, bandwidth, weightmethod=1):
         """
-        This function computes the weights for neighborhood.
+        Compute the weights for neighborhood.
         :param distance: distance in meters to be considered for weighting
         :param bandwidth: bandwidth in meters selected to perform neighborhood
         :param weightmethod: method to be used: 1-gussian , 2-bi square and 3-moving window
@@ -397,7 +397,7 @@ class Segreg:
 
     def cal_localityMatrix(self, bandwidth, weightmethod):
         """
-        This function calculate the local population intensity for all groups.
+        Compute the local population intensity for all groups.
         :param bandwidth: bandwidth for neighborhood in meters
         :param weightmethod: 1 for gaussian, 2 for bi-square and empty for moving window
         :return: 2d array like with population intensity for all groups
@@ -411,13 +411,14 @@ class Segreg:
                 weight = self.getWeight(cost, bandwidth, weightmethod)
                 locality_temp[index, index_sub] = np.sum(weight * np.asarray(self.pop[:, index_sub]))/np.sum(weight)
         self.locality = locality_temp
+        # assign zero to negative values
         self.locality[np.where(self.locality < 0)[0], np.where(self.locality < 0)[1]] = 0
 
     def cal_localDissimilarity(self):
         """
         Compute local dissimilarity for all groups.
-        :return: 1d array like with results for all groups, size of localities
         """
+        # non-spatial version loop, uses raw data
         if len(self.locality) == 0:
             lj = np.ravel(self.pop_sum)
             tjm = np.asarray(self.pop) * 1.0 / lj[:, None]
@@ -426,6 +427,7 @@ class Segreg:
             pop_total = np.sum(self.pop)
             local_diss = np.sum(1.0 * np.array(np.fabs(tjm - tm)) *
                                 np.asarray(self.pop_sum).ravel()[:, None] / (2 * pop_total * index_i), axis=1)
+        # spatial version loop, uses population intensity
         else:
             lj = np.asarray(np.sum(self.locality, axis=1))
             tjm = self.locality * 1.0 / lj[:, None]
@@ -434,39 +436,43 @@ class Segreg:
             pop_total = np.sum(self.pop)
             local_diss = np.sum(1.0 * np.array(np.fabs(tjm - tm)) *
                                 np.asarray(self.pop_sum).ravel()[:, None] / (2 * pop_total * index_i), axis=1)
+
+        # clear nan values and transpose matrix
         local_diss = np.nan_to_num(local_diss)
         local_diss = np.asmatrix(local_diss).transpose()
         self.local_dissimilarity = local_diss
 
     def cal_globalDissimilarity(self):
         """
-        This function call local dissimilarity and compute the sum from individual values.
-        :return: display global value
+        Compute global dissimilarity calling the local version and summing up.
         """
         local_diss = self.local_dissimilarity
         self.global_dissimilarity = np.sum(local_diss)
 
     def cal_localExposure(self):
         """
-        This function computes the local exposure index of group m to group n.
+        Compute the local exposure index of group m to group n.
         in situations where m=n, then the result is the isolation index.
-        :return: 2d list with individual indexes
         """
         m = self.n_group
         j = self.n_location
         exposure_rs = np.zeros((j, (m * m)))
+        # non-spatial version loop, uses raw data
         if len(self.locality) == 0:
             local_expo = np.asarray(self.pop) * 1.0 / np.asarray(np.sum(self.pop, axis=0)).ravel()
             locality_rate = np.asarray(self.pop) * 1.0 / np.asarray(np.sum(self.pop, axis=1)).ravel()[:, None]
             for i in range(m):
                 exposure_rs[:, ((i * m) + 0):((i * m) + m)] = np.asarray(locality_rate) * \
                                                               np.asarray(local_expo[:, i]).ravel()[:, None]
+        # spatial version loop, uses population intensity
         else:
             local_expo = np.asarray(self.pop) * 1.0 / np.asarray(np.sum(self.pop, axis=0)).ravel()
             locality_rate = np.asarray(self.locality) * 1.0 / np.asarray(np.sum(self.locality, axis=1)).ravel()[:, None]
             for i in range(m):
                 exposure_rs[:, ((i * m) + 0):((i * m) + m)] = np.asarray(locality_rate) * \
                                                               np.asarray(local_expo[:, i]).ravel()[:, None]
+
+        # clear nan and inf values and convert to matrix
         exposure_rs[np.isinf(exposure_rs)] = 0
         exposure_rs[np.isnan(exposure_rs)] = 0
         exposure_rs = np.asmatrix(exposure_rs)
@@ -474,8 +480,7 @@ class Segreg:
 
     def cal_globalExposure(self):
         """
-        This function call local exposure function and sum the results for the global index.
-        :return: displays global number result
+        Compute global exposure calling the local version and summing up.
         """
         m = self.n_group
         local_exp = self.local_exposure
@@ -485,16 +490,20 @@ class Segreg:
 
     def cal_localEntropy(self):
         """
-        This function computes the local entropy score for a unit area Ei (diversity). A unit within the
-        metropolitan area, such as a census tract. If population intensity was previously computed,
-        the spatial version will be returned, else the non spatial version will be selected (raw data).
-        :return: 2d array with local indices
+        Compute local entropy score for a unit area Ei (diversity). A unit
+        within the metropolitan area, such as a census tract. If population
+        intensity was previously computed, the spatial version will be returned,
+        otherwise the non spatial version will be selected (raw data).
         """
+        # non-spatial version, uses raw data
         if len(self.locality) == 0:
             proportion = np.asarray(self.pop / self.pop_sum)
+        # spatial version, uses population intensity
         else:
             proportion = np.asarray(self.locality / self.pop_sum)
         entropy = proportion * np.log(1 / proportion)
+
+        # clear nan and inf values, sum line and reshape
         entropy[np.isnan(entropy)] = 0
         entropy[np.isinf(entropy)] = 0
         entropy = np.sum(entropy, axis=1)
@@ -503,47 +512,51 @@ class Segreg:
 
     def cal_globalEntropy(self):
         """
-        This function computes the global entropy score E (diversity). A metropolitan area's entropy score.
-        :return: diversity score
+        Compute the global entropy score E (diversity), metropolitan area's entropy score.
         """
         group_score = []
+        # non-spatial version, uses raw data
         if len(self.locality) == 0:
             pop_total = np.sum(self.pop_sum)
             prop = np.asarray(np.sum(self.pop, axis=0))[0]
+        # spatial version, uses population intensity
         else:
             pop_total = np.sum(self.pop_sum)
             prop = np.asarray(np.sum(self.locality, axis=0))
         for group in prop:
             group_idx = group / pop_total * np.log(1 / (group / pop_total))
             group_score.append(group_idx)
+
+        # sum scores from each group to get the result
         global_entro = np.sum(group_score)
         self.global_entropy = global_entro
 
     def cal_localIndexH(self):
         """
-        This function computes the local entropy index H for all localities. The functions cal_localEntropy() for
-        local diversity and cal_globalEntropy for global entropy are called as input. If population intensity
-        was previously computed, the spatial version will be returned, else the non spatial version will be
-        selected (raw data).
-        :return: array like with scores for n groups (size groups)
+        Computes the local entropy index H for all localities. The functions
+        cal_localEntropy() for local diversity and cal_globalEntropy for global
+        entropy are called as input. If population intensity was previously
+        computed, the spatial version will be returned, else the non spatial
+        version will be selected (raw data).
         """
         local_entropy = self.local_entropy
         global_entropy = self.global_entropy
+        # non-spatial version, uses raw data
         if len(self.locality) == 0:
             et = np.asarray(global_entropy * np.sum(self.pop_sum))
             eei = np.asarray(global_entropy - local_entropy)
             h_local = np.asarray(self.pop_sum) * eei / et
+        # spatial version, uses population intensity
         else:
             et = np.asarray(global_entropy * np.sum(self.locality))
             eei = np.asarray(global_entropy - local_entropy)
             h_local = np.asarray(self.pop_sum) * eei / et
+
         self.local_indexh = h_local
 
     def cal_globalIndexH(self):
         """
-        Function to compute global index H returning the sum of local values. The function cal_localIndexH is
-        called as input for sum of individual values.
-        :return: values with global index for each group.
+        Compute global index H calling the local version summing up.
         """
         h_local = self.local_indexh
         h_global = np.sum(h_local, axis=0)
@@ -558,8 +571,9 @@ class Segreg:
 
     def runMeasuresButton(self):
         """
-        Call the functions to compute local and global measures. It populates internals
-        with lists storing the results for later save.
+        Call the functions to compute local and global measures. The dependency
+        complexity is handle by chacking the flaged measures and calling local
+        measures for global versions. Results are stored for posterior output save.
         """
         # call local and global exposure/isolation measures
         if self.dlg.expo_global.isChecked() is True:
@@ -593,20 +607,26 @@ class Segreg:
             self.cal_globalEntropy()
             self.cal_localIndexH()
 
+        # inform sucess if all were computed
         QMessageBox.information(None, "Info", 'Measures computed successfully!')
 
     def joinResultsData(self):
-        """ Function to join results on a unique matrix and assign names for columns"""
+        """ Join results on a unique matrix and assign names for columns to be
+        used as header for csv file and shapefile output"""
         names = ['id','x','y']
+        measures_computed = []
+
+        # create new names for groups starting by 0
         for i in range(self.n_group):
             names.append('group_' + str(i))
 
-        measures_computed = []
+        # update names with locality if computed
         if len(self.locality) != 0:
             measures_computed.append('self.locality')
             for i in range(self.n_group):
                 names.append('intens_' + str(i))
 
+        # update names with exposure/isolation if computed
         if self.dlg.expo_local.isChecked() is True:
             measures_computed.append('self.local_exposure')
             for i in range(self.n_group):
@@ -616,19 +636,24 @@ class Segreg:
                     else:
                         names.append('exp_' + str(i) + str(j))
 
+        # update names with dissimilarity if computed
         if self.dlg.diss_local.isChecked() is True:
             measures_computed.append('self.local_dissimilarity')
             names.append('dissimil')
 
+        # update names with entropy if computed
         if self.dlg.entro_local.isChecked() is True:
             measures_computed.append('self.local_entropy')
             names.append('entropy')
 
+        # update names with index H if computed
         if self.dlg.idxh_local.isChecked() is True:
             measures_computed.append('self.local_indexh')
             names.append('indexh')
 
         output_labels = tuple([eval(x) for x in measures_computed])
+
+        # try to concaneta results, else only original input
         try:
             computed_results = np.concatenate(output_labels, axis=1)
             results_matrix = np.concatenate((self.track_id, self.attributeMatrix, computed_results), axis=1)
@@ -642,7 +667,7 @@ class Segreg:
             raise
 
     def addShapeToCanvas(self, result, path):
-        """Function to add results to Canvas as a shape file"""
+        """Add results to Canvas as a new shapefile based on original input"""
         # get data from layer confirmed on groups selection
         sourceLayer = QgsMapLayerRegistry.instance().mapLayersByName(self.confirmedLayerName)[0]
         sourceFeats = [feat for feat in sourceLayer.getFeatures()]
@@ -675,9 +700,8 @@ class Segreg:
         QgsMapLayerRegistry.instance().addMapLayer(newLayer)
 
     def saveResults(self):
-        """ Function to save results to a local file."""
+        """ Save results to a local file."""
         try:
-
             filename = QFileDialog.getSaveFileName(self.dlg, "Select output file ", "", "*.csv")
             self.dlg.leOutput.setText(filename)
             path = self.dlg.leOutput.text()
@@ -687,15 +711,15 @@ class Segreg:
             # save local measures results on a csv file
             np.savetxt(path, result[0], header=labels, delimiter=',', newline='\n', fmt="%s")
 
-            # add result to canvas as shape file if requested
+            # add result to canvas as shapefile if requested
             if self.dlg.addToCanvas.isChecked() is True:
                 try:
                     self.addShapeToCanvas(result, path)
                 except:
-                    QMessageBox.critical(None, "Error", "Could not create shape!" )
+                    QMessageBox.critical(None, "Error", "Could not create shape!")
                     return
 
-            # save global results to a second local file
+            # save global results to a second csv file
             with open("%s_global.csv" % path, "w") as f:
                 f.write('Global dissimilarity: ' + str(self.global_dissimilarity))
                 f.write('\nGlobal entropy: ' + str(self.global_entropy))
@@ -709,6 +733,7 @@ class Segreg:
             self.local_entropy = []
             self.local_indexh = []
         except:
+            QMessageBox.critical(None, "Error", "Could not save data!")
             return
 
     def run(self):
@@ -726,6 +751,7 @@ class Segreg:
         # show the dialog
         self.dlg.show()
 
+        # clear if there is any layer and warn user if not
         if self.dlg.cbLayers.count() == 0:
             QMessageBox.critical(None, "Error", 'No layer found!')
             return
