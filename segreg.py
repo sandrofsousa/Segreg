@@ -168,16 +168,16 @@ class Segreg:
         # initialize dialog loop to add attributes for display
         self.dlg.cbLayers.currentIndexChanged.connect(self.addLayerAttributes)
 
-        # save selected values from user and populate internals
+        # connect to button to save selected values from user and populate internals
         self.dlg.pbConfirm.clicked.connect(self.confirmButton)
 
-        # run population intensity calculation
+        # connect to button to run population intensity calculation
         self.dlg.pbRunIntensity.clicked.connect(self.runIntensityButton)
 
-        # run measures from selected check boxes
+        # connect to button to run measures from selected check boxes
         self.dlg.pbRunMeasures.clicked.connect(self.runMeasuresButton)
 
-        # select all measures
+        # connect to button to select all measures
         self.dlg.pbSelectAll.clicked.connect(self.selectAllMeasures)
 
         # run dialog to select and save output file
@@ -199,7 +199,7 @@ class Segreg:
         del self.toolbar
 
     def clearVariables(self):
-        """clear local list and variables"""
+        """clear local lists and variables"""
         # clear input tables
         self.location = []
         self.pop = []
@@ -232,8 +232,8 @@ class Segreg:
 
     def addLayers(self):
         """
-        This function add layers from canvas to check box. It only includes non geographic layers.
-        This is due to a restriction at scipy funtion CDIST to calculate distance the matrix.
+        Add layers from canvas to combo box. It only includes non geographic layers.
+        This is due to a restriction at scipy funtion CDIST to compute distance matrix.
         """
         # clear combo box
         self.dlg.cbLayers.clear()
@@ -251,13 +251,14 @@ class Segreg:
 
     def addLayerAttributes(self):
         """
-        Populates ID and attributes from layer for selection.
-        :param layer_index: index of current selected layer
+        Populates ID and attributes from layer for user selection. Position on
+        current layer name from combo box.
         """
-        # clear list
+        # clear qt objects
         self.dlg.cbId.clear()
         self.model.clear()
         layerName = self.dlg.cbLayers.currentText()
+
         try:
             selectedLayer = QgsMapLayerRegistry.instance().mapLayersByName(layerName)[0]
             fields = []
@@ -268,7 +269,7 @@ class Segreg:
                 fields.append(i.name())
                 self.model.appendRow(item)
 
-            # Update id and lvGroups combo boxes with fields
+            # Update id and groups combo boxes with values
             self.dlg.cbId.addItems(fields)
             self.dlg.lvGroups.setModel(self.model)
         except:
@@ -293,12 +294,12 @@ class Segreg:
                 QMessageBox.critical(None, "Error", msg)
 
     def confirmButton(self):
-        """Populate local variables with selected fields"""
+        """Populate local variables (attributes matrix) with selected fields"""
         # get layer and fields from combo box items
         layerName = self.dlg.cbLayers.currentText()
         selectedLayer = QgsMapLayerRegistry.instance().mapLayersByName(layerName)[0]
         field_names = self.selectGroups()
-        # to be used later on saving results as shapefile
+        # to be used later to save results as shapefile
         self.confirmedLayerName = layerName
 
         # populate track_id data
@@ -314,7 +315,7 @@ class Segreg:
         y_cord = [feat.geometry().centroid().asPoint().y() for feat in selectedLayer.getFeatures()]
         y_cord = np.reshape(y_cord, (len(y_cord), 1))
 
-        # populate groups data based on selected list
+        # populate groups data based on selected fields list
         groups = []
         for i in field_names:
             values = selectedLayer.getDoubleValues(i)[0]  # getDoubleValues for float
@@ -343,7 +344,8 @@ class Segreg:
         # unlock measures tab and display confirmation if success
         if self.attributeMatrix is not None:
             self.dlg.tabWidget.setTabEnabled(1, True)
-            self.iface.messageBar().pushMessage("Info", "Input saved", level=QgsMessageBar.INFO, duration=2)
+            self.iface.messageBar().pushMessage("Info",
+             "Input saved", level=QgsMessageBar.INFO, duration=2)
 
     def runIntensityButton(self):
         """Run population intensity for selected bandwidth and weight method"""
@@ -359,6 +361,7 @@ class Segreg:
             weight = self.dlg.bgWeight.checkedId()
             bw = int(self.dlg.leBandwidht.text())
 
+            # check if weight method was selected
             if weight == -1:
                 QMessageBox.critical(None, "Error", "Please select a weight method")
             else:
@@ -370,7 +373,7 @@ class Segreg:
 
     def getWeight(self, distance, bandwidth, weightmethod=1):
         """
-        This function computes the weights for neighborhood. Default value is Gaussian(1)
+        This function computes the weights for neighborhood.
         :param distance: distance in meters to be considered for weighting
         :param bandwidth: bandwidth in meters selected to perform neighborhood
         :param weightmethod: method to be used: 1-gussian , 2-bi square and 3-moving window
@@ -392,7 +395,7 @@ class Segreg:
             raise Exception('Invalid weight method selected!')
         return weight
 
-    def cal_localityMatrix(self, bandwidth=5000, weightmethod=1):
+    def cal_localityMatrix(self, bandwidth, weightmethod):
         """
         This function calculate the local population intensity for all groups.
         :param bandwidth: bandwidth for neighborhood in meters
