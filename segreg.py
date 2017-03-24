@@ -359,9 +359,14 @@ class Segreg:
             weight = self.dlg.bgWeight.checkedId()
             bw = int(self.dlg.leBandwidht.text())
 
-            self.cal_localityMatrix(bw, weight)
-            self.iface.messageBar().pushMessage("Info", "Matrix of shape %s computed" % str(self.locality.shape),
-                                                level=QgsMessageBar.INFO, duration=4)
+            if weight == -1:
+                QMessageBox.critical(None, "Error", "Please select a weight method")
+            else:
+                self.cal_localityMatrix(bw, weight)
+                self.iface.messageBar().pushMessage("Info",
+                 "Matrix of shape %s computed" % str(self.locality.shape),
+                                                level=QgsMessageBar.INFO,
+                                                duration=4)
 
     def getWeight(self, distance, bandwidth, weightmethod=1):
         """
