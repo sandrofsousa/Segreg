@@ -9,24 +9,25 @@
 [general]
 name=Segreg
 qgisMinimumVersion=2.0
-description=This plugin computes spatial and non spatial segregation measures
+description=Computes spatial and non spatial segregation measures - Scipy needed.
 version=0.1
-author=Sandro Sousa / USP-UFABC
+author=Sandro Sousa
 email=sandrofsousa@gmail.com
 
-about=Segregation measures plugin
+about=This plugin computes spatial (using population intensity) and non spatial (using raw data) segregation measures for vector layer attributes.
 
-tracker=https://github.com/sandrofsousa/segreg.git
+tracker=https://github.com/sandrofsousa/Segreg/issues
 repository=https://github.com/sandrofsousa/segreg.git
 # End of mandatory metadata
 
 # Recommended items:
 
+category=Vector
 # Uncomment the following line and add your changelog:
 # changelog=
 
 # Tags are comma separated with spaces allowed
-tags=qgis, python, segregation
+tags=segregation, vector
 
 homepage=https://github.com/sandrofsousa/segreg.git
 category=Plugins
@@ -36,4 +37,3 @@ experimental=True
 
 # deprecated flag (applies to the whole plugin, not just a single version)
 deprecated=False
-
