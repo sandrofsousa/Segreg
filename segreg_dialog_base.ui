@@ -26,7 +26,7 @@
       <bool>true</bool>
      </property>
      <property name="currentIndex">
-      <number>2</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab_input">
       <attribute name="title">
@@ -36,7 +36,7 @@
        <item>
         <widget class="QLabel" name="label_6">
          <property name="text">
-          <string>Select Attributes - Required:</string>
+          <string>Select Attributes - Required</string>
          </property>
         </widget>
        </item>
@@ -220,7 +220,7 @@
        <item>
         <widget class="QLabel" name="label_11">
          <property name="text">
-          <string>Select measures:</string>
+          <string>Select measures</string>
          </property>
         </widget>
        </item>
