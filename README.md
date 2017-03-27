@@ -30,4 +30,6 @@ Segreg is an experimental plugin, so it is required to check the flag `Show also
 To report bugs or any problem running the plugin please place an issue at:
 https://github.com/sandrofsousa/Segreg/issues
  
-For technical questions and contribuition please contact me directly at my email (profile page).
+For technical questions and contribuition please contact directly by email (profile page).
+
+*This plugin is under GPL2 License, please read it carefully before using this code in your application*
