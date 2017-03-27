@@ -27,7 +27,7 @@ category=Vector
 # changelog=
 
 # Tags are comma separated with spaces allowed
-tags=segregation, vector
+tags=segregation, diversity, vector
 
 homepage=https://github.com/sandrofsousa/segreg.git
 category=Plugins
