@@ -1,4 +1,5 @@
 ## Segreg  - A QGIS plugin for segregation measures calculation
+[![DOI](https://zenodo.org/badge/59612821.svg)](https://zenodo.org/badge/latestdoi/59612821)
 
 **Segreg** is part of Resolution project (REsilient Systems fOr Land Use TransportatION):
  https://www.researchgate.net/project/RESOLUTION-REsilient-Systems-fOr-Land-Use-TransportatION-2
@@ -25,11 +26,11 @@ Segreg is an experimental plugin, so it is required to check the flag `Show also
 ### Tutorial
  A short tutorial is available in `wiki` tab in this repository:
  https://github.com/sandrofsousa/Segreg/wiki
- 
+
 ### Bugs and technical inqueries
 To report bugs or any problem running the plugin please place an issue at:
 https://github.com/sandrofsousa/Segreg/issues
- 
+
 For technical questions and contribuition please contact directly by email (profile page).
 
 *This plugin is under GPL2 License, please read it carefully before using this code in your application*
