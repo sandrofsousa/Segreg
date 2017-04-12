@@ -85,7 +85,7 @@ class Segreg:
         self.n_location = 0                     # length of list (n lines) (attributeMatrix.shape[0])
         self.n_group = 0                        # number of groups (attributeMatrix.shape[1] - 4)
         self.costMatrix = []                    # scipy cdist distance matrix
-        self.track_id = []                      # track ids at string format
+        self.tract_id = []                      # tract ids at string format
 
         # Local and global internals
         self.local_dissimilarity = []
@@ -207,7 +207,7 @@ class Segreg:
         self.locality = []
         self.n_location = 0
         self.n_group = 0
-        self.track_id = []
+        self.tract_id = []
         self.selectedFields = []
         self.layers = []
 
@@ -302,12 +302,12 @@ class Segreg:
         # to be used later to save results as shapefile
         self.confirmedLayerName = layerName
 
-        # populate track_id data
+        # populate tract_id data
         id_name = self.dlg.cbId.currentText()
         id_values = selectedLayer.getValues(id_name)[0]
         id_values = [str(x) for x in id_values]
-        self.track_id = np.asarray(id_values)
-        self.track_id = self.track_id.reshape((len(id_values), 1))
+        self.tract_id = np.asarray(id_values)
+        self.tract_id = self.tract_id.reshape((len(id_values), 1))
 
         # return x and y from polygons centroids
         x_cord = [feat.geometry().centroid().asPoint().x() for feat in selectedLayer.getFeatures()]
@@ -656,11 +656,11 @@ class Segreg:
         # try to concaneta results, else only original input
         try:
             computed_results = np.concatenate(output_labels, axis=1)
-            results_matrix = np.concatenate((self.track_id, self.attributeMatrix, computed_results), axis=1)
+            results_matrix = np.concatenate((self.tract_id, self.attributeMatrix, computed_results), axis=1)
             measures_computed[:] = []
             return results_matrix, names
         except ValueError:
-            results_matrix = np.concatenate((self.track_id, self.attributeMatrix), axis=1)
+            results_matrix = np.concatenate((self.tract_id, self.attributeMatrix), axis=1)
             return results_matrix, names
         except:
             QMessageBox.critical(None, "Error", 'Could not join result data!')

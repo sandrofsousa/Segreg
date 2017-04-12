@@ -26,7 +26,7 @@
       <bool>true</bool>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="tab_input">
       <attribute name="title">
@@ -462,7 +462,10 @@ Federal University of ABC (UFABC)
 National Institute for Space Research (INPE)
 
 Technical inquiries:
-https://github.com/sandrofsousa/Segreg.git</string>
+https://github.com/sandrofsousa/Segreg.git
+
+Tutorial:
+https://github.com/sandrofsousa/Segreg/wiki</string>
          </property>
         </widget>
        </item>
