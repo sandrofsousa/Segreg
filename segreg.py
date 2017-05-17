@@ -69,7 +69,7 @@ class Segreg:
         self.toolbar = self.iface.addToolBar(u'Segreg')
         self.toolbar.setObjectName(u'Segreg')
 
-        # Other initializations
+        # Other initializations - Qt Objects
         self.lvGroups = QListView()
         self.model = QStandardItemModel(self.dlg.lvGroups)
         self.lvGroups.setSelectionMode(QAbstractItemView.ExtendedSelection)
@@ -78,14 +78,14 @@ class Segreg:
 
         # Segregation measures attributes
         self.attributeMatrix = np.matrix([])    # attributes matrix full size - all columns
-        self.location = []                      # x and y coordinates from file (2D lists)
-        self.pop = []                           # groups to be analysed [:,3:n] (2D lists)
-        self.pop_sum = []                       # sum of population groups from pop (1d array)
-        self.locality = []                      # local population intensity for groups
+        self.location = []                      # x and y coordinates from tract centroid (2D lists)
+        self.pop = []                           # population of each groups by tract (2D lists)
+        self.pop_sum = []                       # total population of the tract (sum all groups)
+        self.locality = []                      # population intensity by groups by tract
         self.n_location = 0                     # length of list (n lines) (attributeMatrix.shape[0])
         self.n_group = 0                        # number of groups (attributeMatrix.shape[1] - 4)
         self.costMatrix = []                    # scipy cdist distance matrix
-        self.tract_id = []                      # tract ids at string format
+        self.tract_id = []                      # tract ids in string format
 
         # Local and global internals
         self.local_dissimilarity = []
@@ -211,7 +211,7 @@ class Segreg:
         self.selectedFields = []
         self.layers = []
 
-        # clear qt objects
+        # clear Qt objects
         self.dlg.leOutput.clear()
         self.model.clear()
         self.dlg.leBandwidht.clear()
@@ -220,7 +220,7 @@ class Segreg:
         for button in self.dlg.gbGlobal.findChildren(QCheckBox):
             button.setChecked(False)
 
-        # clear results tables
+        # clear result tables
         self.local_dissimilarity = []
         self.local_exposure = []
         self.local_entropy = []
@@ -254,7 +254,7 @@ class Segreg:
         Populates ID and attributes from layer for user selection. Position on
         current layer name from combo box.
         """
-        # clear qt objects
+        # clear Qt objects
         self.dlg.cbId.clear()
         self.model.clear()
         layerName = self.dlg.cbLayers.currentText()
@@ -515,13 +515,13 @@ class Segreg:
         Compute the global entropy score E (diversity), metropolitan area's entropy score.
         """
         group_score = []
+        pop_total = np.sum(self.pop_sum)
+
         # non-spatial version, uses raw data
         if len(self.locality) == 0:
-            pop_total = np.sum(self.pop_sum)
             prop = np.asarray(np.sum(self.pop, axis=0))[0]
         # spatial version, uses population intensity
         else:
-            pop_total = np.sum(self.pop_sum)
             prop = np.asarray(np.sum(self.locality, axis=0))
         for group in prop:
             group_idx = group / pop_total * np.log(1 / (group / pop_total))
