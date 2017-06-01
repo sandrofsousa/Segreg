@@ -1,7 +1,7 @@
-# This file contains metadata for your plugin. Since 
-# version 2.0 of QGIS this is the proper way to supply 
-# information about a plugin. The old method of 
-# embedding metadata in __init__.py will 
+# This file contains metadata for your plugin. Since
+# version 2.0 of QGIS this is the proper way to supply
+# information about a plugin. The old method of
+# embedding metadata in __init__.py will
 # is no longer supported since version 2.0.
 
 # This file should be included when you package your plugin.# Mandatory items:
@@ -10,7 +10,7 @@
 name=Segreg
 qgisMinimumVersion=2.0
 description=Computes spatial and non spatial segregation measures - Scipy needed.
-version=0.1
+version=0.2
 author=Sandro Sousa
 email=sandrofsousa@gmail.com
 
@@ -23,8 +23,13 @@ repository=https://github.com/sandrofsousa/segreg.git
 # Recommended items:
 
 category=Vector
+
 # Uncomment the following line and add your changelog:
-# changelog=
+changelog=0.2
+    - Fix spatial local entropy, now using locality sum at polygon.
+
+    0.1
+    - First release to QGIS official repository.
 
 # Tags are comma separated with spaces allowed
 tags=segregation, diversity, vector

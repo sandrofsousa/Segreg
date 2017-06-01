@@ -10,11 +10,11 @@
 The plugin allows to compute segregation and diversity measures on spatial and non spatial modes. The following measures are supported:
 * Population Intensity
 * Local Dissimilarity
-* Local Expousure/Isolation
+* Local Exposure/Isolation
 * Local Entropy
 * Local Index H
 * Global Dissimilarity
-* Global Expousure/Isolation
+* Global Exposure/Isolation
 * Global Entropy
 * Global Index H
 
@@ -27,10 +27,10 @@ Segreg is an experimental plugin, so it is required to check the flag `Show also
  A short tutorial is available in `wiki` tab in this repository:
  https://github.com/sandrofsousa/Segreg/wiki
 
-### Bugs and technical inqueries
+### Bugs and technical inquiries
 To report bugs or any problem running the plugin please place an issue at:
 https://github.com/sandrofsousa/Segreg/issues
 
-For technical questions and contribuition please contact directly by email (profile page).
+For technical questions and contribution please contact directly by email (profile page).
 
 *This plugin is under GPL2 License, please read it carefully before using this code in your application*
