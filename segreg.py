@@ -262,6 +262,7 @@ class Segreg:
         try:
             selectedLayer = QgsMapLayerRegistry.instance().mapLayersByName(layerName)[0]
             fields = []
+
             # get attributes from layer
             for i in selectedLayer.pendingFields():
                 item = QStandardItem(i.name())
@@ -272,17 +273,20 @@ class Segreg:
             # Update id and groups combo boxes with values
             self.dlg.cbId.addItems(fields)
             self.dlg.lvGroups.setModel(self.model)
+
         except:
             return
 
     def selectGroups(self):
         """Get fields selected on combo box and return list"""
         selected = []
+
         # get fields from model with flag signal
         for i in range(self.model.rowCount()):
             field = self.model.item(i)
             if field.checkState() == 2:
                 selected.append(str(field.text()))
+
         return selected
 
     def checkSelectedGroups(self):
@@ -380,19 +384,24 @@ class Segreg:
         :return: weight value for internal use
         """
         distance = np.asarray(distance.T)
+
         if weightmethod == 1:
             weight = np.exp((-0.5) * (distance / bandwidth) * (distance / bandwidth))
+
         elif weightmethod == 2:
             weight = (1 - (distance / bandwidth) * (distance / bandwidth)) * (
             1 - (distance / bandwidth) * (distance / bandwidth))
             sel = np.where(distance > bandwidth)
             weight[sel[0]] = 0
+
         elif weightmethod == 3:
             weight = (1 + (distance * 0))
             sel = np.where(distance > bandwidth)
             weight[sel[0]] = 0
+
         else:
             raise Exception('Invalid weight method selected!')
+
         return weight
 
     def cal_localityMatrix(self, bandwidth, weightmethod):
@@ -405,11 +414,13 @@ class Segreg:
         n_local = self.location.shape[0]
         n_subgroup = self.pop.shape[1]
         locality_temp = np.empty([n_local, n_subgroup])
+
         for index in range(0, n_local):
             for index_sub in range(0, n_subgroup):
                 cost = cdist(self.location[index, :], self.location)
                 weight = self.getWeight(cost, bandwidth, weightmethod)
                 locality_temp[index, index_sub] = np.sum(weight * np.asarray(self.pop[:, index_sub]))/np.sum(weight)
+
         self.locality = locality_temp
         # assign zero to negative values
         self.locality[np.where(self.locality < 0)[0], np.where(self.locality < 0)[1]] = 0
@@ -427,6 +438,7 @@ class Segreg:
             pop_total = np.sum(self.pop)
             local_diss = np.sum(1.0 * np.array(np.fabs(tjm - tm)) *
                                 np.asarray(self.pop_sum).ravel()[:, None] / (2 * pop_total * index_i), axis=1)
+
         # spatial version loop, uses population intensity
         else:
             lj = np.asarray(np.sum(self.locality, axis=1))
@@ -457,6 +469,7 @@ class Segreg:
         m = self.n_group
         j = self.n_location
         exposure_rs = np.zeros((j, (m * m)))
+
         # non-spatial version loop, uses raw data
         if len(self.locality) == 0:
             local_expo = np.asarray(self.pop) * 1.0 / np.asarray(np.sum(self.pop, axis=0)).ravel()
@@ -498,9 +511,12 @@ class Segreg:
         # non-spatial version, uses raw data
         if len(self.locality) == 0:
             proportion = np.asarray(self.pop / self.pop_sum)
+
         # spatial version, uses population intensity
         else:
-            proportion = np.asarray(self.locality / self.pop_sum)
+            polygon_sum = np.sum(self.locality, axis=1).reshape(self.n_location, 1)
+            proportion = np.asarray(self.locality / polygon_sum)
+
         entropy = proportion * np.log(1 / proportion)
 
         # clear nan and inf values, sum line and reshape
@@ -516,13 +532,9 @@ class Segreg:
         """
         group_score = []
         pop_total = np.sum(self.pop_sum)
+        prop = np.asarray(np.sum(self.pop, axis=0))[0]
 
-        # non-spatial version, uses raw data
-        if len(self.locality) == 0:
-            prop = np.asarray(np.sum(self.pop, axis=0))[0]
-        # spatial version, uses population intensity
-        else:
-            prop = np.asarray(np.sum(self.locality, axis=0))
+        # loop at sum of each population groups
         for group in prop:
             group_idx = group / pop_total * np.log(1 / (group / pop_total))
             group_score.append(group_idx)
@@ -541,16 +553,11 @@ class Segreg:
         """
         local_entropy = self.local_entropy
         global_entropy = self.global_entropy
-        # non-spatial version, uses raw data
-        if len(self.locality) == 0:
-            et = np.asarray(global_entropy * np.sum(self.pop_sum))
-            eei = np.asarray(global_entropy - local_entropy)
-            h_local = np.asarray(self.pop_sum) * eei / et
-        # spatial version, uses population intensity
-        else:
-            et = np.asarray(global_entropy * np.sum(self.locality))
-            eei = np.asarray(global_entropy - local_entropy)
-            h_local = np.asarray(self.pop_sum) * eei / et
+
+        # compute index
+        et = np.asarray(global_entropy * np.sum(self.pop_sum))
+        eei = np.asarray(global_entropy - local_entropy)
+        h_local = np.asarray(self.pop_sum) * eei / et
 
         self.local_indexh = h_local
 
@@ -566,6 +573,7 @@ class Segreg:
         """Select all check boxes on measures groups"""
         for button in self.dlg.gbLocal.findChildren(QCheckBox):
             button.setChecked(True)
+
         for button in self.dlg.gbGlobal.findChildren(QCheckBox):
             button.setChecked(True)
 
