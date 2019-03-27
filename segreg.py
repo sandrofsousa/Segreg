@@ -20,21 +20,26 @@
  *                                                                         *
  ***************************************************************************/
 """
-from qgis.core import *
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
-from qgis.utils import *
+from __future__ import absolute_import
+from builtins import str
+from builtins import range
+from builtins import object
+from qgis.core import Qgis, QgsProject, QgsVectorLayer, QgsField
+from qgis.gui import QgsMessageBar
+from qgis.PyQt.QtGui import QIcon, QStandardItem, QStandardItemModel
+from qgis.PyQt.QtWidgets import QAction, QCheckBox, QMessageBox, QFileDialog, QAbstractItemView, QListView
+from qgis.PyQt.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt, QFileInfo, QVariant
+import os.path
 import numpy as np
 from scipy.spatial.distance import cdist
 
 # Initialize Qt resources from file resources.py
-import resources
+from . import resources
 # Import the code for the dialog
-from segreg_dialog import SegregDialog
-import os.path
+from .segreg_dialog import SegregDialog
 
 
-class Segreg:
+class Segreg(object):
     def __init__(self, iface):
         """Constructor.
         :param iface: An interface instance that will be passed to this class
@@ -239,7 +244,7 @@ class Segreg:
         self.dlg.cbLayers.clear()
 
         layer_list = []
-        for layer in QgsMapLayerRegistry.instance().mapLayers().values():
+        for layer in list(QgsProject.instance().addMapLayer().values()):
             # Check if layer is geographic or projected and append projected only
             isgeographic = layer.crs().geographicFlag()
             if isgeographic is False:
@@ -260,7 +265,7 @@ class Segreg:
         layerName = self.dlg.cbLayers.currentText()
 
         try:
-            selectedLayer = QgsMapLayerRegistry.instance().mapLayersByName(layerName)[0]
+            selectedLayer = QgsProject.instance().mapLayersByName(layerName)[0]
             fields = []
 
             # get attributes from layer
@@ -301,7 +306,7 @@ class Segreg:
         """Populate local variables (attributes matrix) with selected fields"""
         # get layer and fields from combo box items
         layerName = self.dlg.cbLayers.currentText()
-        selectedLayer = QgsMapLayerRegistry.instance().mapLayersByName(layerName)[0]
+        selectedLayer = QgsProject.instance().mapLayersByName(layerName)[0]
         field_names = self.selectGroups()
         # to be used later to save results as shapefile
         self.confirmedLayerName = layerName
@@ -349,7 +354,7 @@ class Segreg:
         if self.attributeMatrix is not None:
             self.dlg.tabWidget.setTabEnabled(1, True)
             self.iface.messageBar().pushMessage("Info",
-             "Input saved", level=QgsMessageBar.INFO, duration=2)
+             "Input saved", level=Qgis.Info, duration=2)
 
     def runIntensityButton(self):
         """Run population intensity for selected bandwidth and weight method"""
@@ -372,7 +377,7 @@ class Segreg:
                 self.cal_localityMatrix(bw, weight)
                 self.iface.messageBar().pushMessage("Info",
                  "Matrix of shape %s computed" % str(self.locality.shape),
-                                                level=QgsMessageBar.INFO,
+                                                level=Qgis.Info,
                                                 duration=4)
 
     def getWeight(self, distance, bandwidth, weightmethod=1):
@@ -677,7 +682,7 @@ class Segreg:
     def addShapeToCanvas(self, result, path):
         """Add results to Canvas as a new shapefile based on original input"""
         # get data from layer confirmed on groups selection
-        sourceLayer = QgsMapLayerRegistry.instance().mapLayersByName(self.confirmedLayerName)[0]
+        sourceLayer = QgsProject.instance().mapLayersByName(self.confirmedLayerName)[0]
         sourceFeats = [feat for feat in sourceLayer.getFeatures()]
         sourceGeometryType = ['Point','Line','Polygon'][sourceLayer.geometryType()]
         sourceCRS = sourceLayer.crs().authid()
@@ -705,12 +710,12 @@ class Segreg:
                 provider.changeAttributeValues({featid : {idxfield : val}})
 
         # add new layer to canvas
-        QgsMapLayerRegistry.instance().addMapLayer(newLayer)
+        QgsProject.instance().addMapLayer(newLayer)
 
     def saveResults(self):
         """ Save results to a local file."""
         try:
-            filename = QFileDialog.getSaveFileName(self.dlg, "Select output file ", "", "*.csv")
+            filename, __, __ = QFileDialog.getSaveFileName(self.dlg, "Select output file ", "", "*.csv")
             self.dlg.leOutput.setText(filename)
             path = self.dlg.leOutput.text()
             result = self.joinResultsData()

@@ -22,14 +22,14 @@
 """
 
 import os
-
-from PyQt4 import QtGui, uic
+from PyQt5 import uic
+from PyQt5 import QtWidgets
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'segreg_dialog_base.ui'))
 
 
-class SegregDialog(QtGui.QDialog, FORM_CLASS):
+class SegregDialog(QtWidgets.QDialog, FORM_CLASS):
     def __init__(self, parent=None):
         """Constructor."""
         super(SegregDialog, self).__init__(parent)
