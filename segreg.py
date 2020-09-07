@@ -24,7 +24,7 @@ from __future__ import absolute_import
 from builtins import str
 from builtins import range
 from builtins import object
-from qgis.core import Qgis, QgsProject, QgsVectorLayer, QgsField
+from qgis.core import Qgis, QgsProject, QgsVectorLayer, QgsField, QgsVectorLayerUtils
 from qgis.gui import QgsMessageBar
 from qgis.PyQt.QtGui import QIcon, QStandardItem, QStandardItemModel
 from qgis.PyQt.QtWidgets import QAction, QCheckBox, QMessageBox, QFileDialog, QAbstractItemView, QListView
@@ -80,6 +80,7 @@ class Segreg(object):
         self.lvGroups.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.confirmedLayerName = None
         self.dlg.plainTextEdit.setReadOnly(True)
+        self.measuresEmpty = True
 
         # Segregation measures attributes
         self.attributeMatrix = np.matrix([])    # attributes matrix full size - all columns
@@ -244,9 +245,9 @@ class Segreg(object):
         self.dlg.cbLayers.clear()
 
         layer_list = []
-        for layer in list(QgsProject.instance().addMapLayer().values()):
+        for layer in list(QgsProject.instance().mapLayers().values()):
             # Check if layer is geographic or projected and append projected only
-            isgeographic = layer.crs().geographicFlag()
+            isgeographic = layer.crs().isGeographic()
             if isgeographic is False:
                 layer_list.append(layer.name())
             else:
@@ -269,7 +270,7 @@ class Segreg(object):
             fields = []
 
             # get attributes from layer
-            for i in selectedLayer.pendingFields():
+            for i in selectedLayer.fields():
                 item = QStandardItem(i.name())
                 item.setCheckable(True)
                 fields.append(i.name())
@@ -313,7 +314,8 @@ class Segreg(object):
 
         # populate tract_id data
         id_name = self.dlg.cbId.currentText()
-        id_values = selectedLayer.getValues(id_name)[0]
+        # id_values = selectedLayer.getValues(id_name)[0]
+        id_values = QgsVectorLayerUtils.getValues(selectedLayer, id_name)[0]
         id_values = [str(x) for x in id_values]
         self.tract_id = np.asarray(id_values)
         self.tract_id = self.tract_id.reshape((len(id_values), 1))
@@ -327,7 +329,8 @@ class Segreg(object):
         # populate groups data based on selected fields list
         groups = []
         for i in field_names:
-            values = selectedLayer.getDoubleValues(i)[0]  # getDoubleValues for float
+            # getDoubleValues for float type
+            values = QgsVectorLayerUtils.getDoubleValues(selectedLayer, i)[0]
             group = [float(x) for x in values]
             groups.append(group)
         groups = np.asarray(groups).T
@@ -571,7 +574,7 @@ class Segreg(object):
         Compute global index H calling the local version summing up.
         """
         h_local = self.local_indexh
-        h_global = np.sum(h_local, axis=0)
+        h_global = np.sum(h_local)
         self.global_indexh = h_global
 
     def selectAllMeasures(self):
@@ -588,40 +591,52 @@ class Segreg(object):
         complexity is handle by chacking the flaged measures and calling local
         measures for global versions. Results are stored for posterior output save.
         """
-        # call local and global exposure/isolation measures
-        if self.dlg.expo_global.isChecked() is True:
-            self.cal_localExposure()
-            self.cal_globalExposure()
-        if self.dlg.expo_local.isChecked() is True and len(self.local_exposure) == 0:
-            self.cal_localExposure()
+        all_measures = [self.dlg.expo_local,self.dlg.expo_global,
+                        self.dlg.diss_local, self.dlg.diss_global,
+                        self.dlg.entro_local, self.dlg.entro_global,
+                        self.dlg.idxh_local, self.dlg.idxh_global]
+        check_selected = [m.isChecked() for m in all_measures]
 
-        # call local and global dissimilarity measures
-        if self.dlg.diss_global.isChecked() is True:
-            self.cal_localDissimilarity()
-            self.cal_globalDissimilarity()
-        if self.dlg.diss_local.isChecked() is True and len(self.local_dissimilarity) == 0:
-            self.cal_localDissimilarity()
+        # check if there is at least one measure selected
+        if True not in check_selected:
+            QMessageBox.critical(None, "Error", "Please select measures!")
+            return
+        else:
+            # call local and global exposure/isolation measures
+            if self.dlg.expo_global.isChecked() is True:
+                self.cal_localExposure()
+                self.cal_globalExposure()
+            if self.dlg.expo_local.isChecked() is True and len(self.local_exposure) == 0:
+                self.cal_localExposure()
 
-        # call local and global entropy measures
-        if self.dlg.entro_global.isChecked() is True:
-            self.cal_localEntropy()
-            self.cal_globalEntropy()
-        if self.dlg.entro_local.isChecked() is True and len(self.local_entropy) == 0:
-            self.cal_localEntropy()
+            # call local and global dissimilarity measures
+            if self.dlg.diss_global.isChecked() is True:
+                self.cal_localDissimilarity()
+                self.cal_globalDissimilarity()
+            if self.dlg.diss_local.isChecked() is True and len(self.local_dissimilarity) == 0:
+                self.cal_localDissimilarity()
 
-        # call local and global index H measures
-        if self.dlg.idxh_global.isChecked() is True:
-            self.cal_localEntropy()
-            self.cal_globalEntropy()
-            self.cal_localIndexH()
-            self.cal_globalIndexH()
-        if self.dlg.idxh_local.isChecked() is True and len(self.local_indexh) == 0:
-            self.cal_localEntropy()
-            self.cal_globalEntropy()
-            self.cal_localIndexH()
+            # call local and global entropy measures
+            if self.dlg.entro_global.isChecked() is True:
+                self.cal_localEntropy()
+                self.cal_globalEntropy()
+            if self.dlg.entro_local.isChecked() is True and len(self.local_entropy) == 0:
+                self.cal_localEntropy()
 
-        # inform sucess if all were computed
-        QMessageBox.information(None, "Info", 'Measures computed successfully!')
+            # call local and global index H measures
+            if self.dlg.idxh_global.isChecked() is True:
+                self.cal_localEntropy()
+                self.cal_globalEntropy()
+                self.cal_localIndexH()
+                self.cal_globalIndexH()
+            if self.dlg.idxh_local.isChecked() is True and len(self.local_indexh) == 0:
+                self.cal_localEntropy()
+                self.cal_globalEntropy()
+                self.cal_localIndexH()
+
+            # inform sucess if all were computed
+            QMessageBox.information(None, "Info", 'Measures computed successfully!')
+            self.measuresEmpty = False
 
     def joinResultsData(self):
         """ Join results on a unique matrix and assign names for columns to be
@@ -635,13 +650,13 @@ class Segreg(object):
 
         # update names with locality if computed
         if len(self.locality) != 0:
-            measures_computed.append('self.locality')
+            measures_computed.append(self.locality)
             for i in range(self.n_group):
                 names.append('intens_' + str(i))
 
         # update names with exposure/isolation if computed
         if self.dlg.expo_local.isChecked() is True:
-            measures_computed.append('self.local_exposure')
+            measures_computed.append(self.local_exposure)
             for i in range(self.n_group):
                 for j in range(self.n_group):
                     if i == j:
@@ -651,21 +666,21 @@ class Segreg(object):
 
         # update names with dissimilarity if computed
         if self.dlg.diss_local.isChecked() is True:
-            measures_computed.append('self.local_dissimilarity')
+            measures_computed.append(self.local_dissimilarity)
             names.append('dissimil')
 
         # update names with entropy if computed
         if self.dlg.entro_local.isChecked() is True:
-            measures_computed.append('self.local_entropy')
+            measures_computed.append(self.local_entropy)
             names.append('entropy')
 
         # update names with index H if computed
         if self.dlg.idxh_local.isChecked() is True:
-            measures_computed.append('self.local_indexh')
+            measures_computed.append(self.local_indexh)
             names.append('indexh')
 
-        output_labels = tuple([eval(x) for x in measures_computed])
-
+        # output_labels = tuple([eval(x) for x in measures_computed])
+        output_labels = measures_computed
         # try to concaneta results, else only original input
         try:
             computed_results = np.concatenate(output_labels, axis=1)
@@ -697,9 +712,9 @@ class Segreg(object):
         provider = newLayer.dataProvider()
         attr = sourceLayer.dataProvider().fields().toList()
         attr.extend([QgsField(label, QVariant.Double) for label in labels])
-        provider.addFeatures(sourceFeats)
         provider.addAttributes(attr)
         newLayer.updateFields()
+        provider.addFeatures(sourceFeats)
 
         # add results from measures selected for calculation
         for idxfeat, feat in enumerate(newLayer.getFeatures()):
@@ -714,8 +729,11 @@ class Segreg(object):
 
     def saveResults(self):
         """ Save results to a local file."""
-        try:
-            filename, __, __ = QFileDialog.getSaveFileName(self.dlg, "Select output file ", "", "*.csv")
+        if self.measuresEmpty is True:
+            QMessageBox.information(None, "Warning", "Please compute measures first!")
+            return
+        else:
+            filename, __ = QFileDialog.getSaveFileName(self.dlg, "Select output file ", "", "*.csv")
             self.dlg.leOutput.setText(filename)
             path = self.dlg.leOutput.text()
             result = self.joinResultsData()
@@ -733,7 +751,7 @@ class Segreg(object):
                     return
 
             # save global results to a second csv file
-            with open("%s_global.csv" % path, "w") as f:
+            with open("%s_global.csv" % path[:-4], "w") as f:
                 f.write('Global dissimilarity: ' + str(self.global_dissimilarity))
                 f.write('\nGlobal entropy: ' + str(self.global_entropy))
                 f.write('\nGlobal Index H: ' + str(self.global_indexh))
@@ -745,9 +763,8 @@ class Segreg(object):
             self.local_exposure = []
             self.local_entropy = []
             self.local_indexh = []
-        except:
-            QMessageBox.critical(None, "Error", "Could not save data!")
-            return
+            # inform success
+            QMessageBox.information(None, "Info", "Results saved successfully!")
 
     def run(self):
         """Run method to call dialog and connect interface with functions"""

@@ -13,7 +13,7 @@ repository=https://github.com/sandrofsousa/segreg.git
 about=Computes spatial segregation measures, using population intensity, and non spatial with raw data for vector layer attributes.
 
 changelog=0.3
-    - Add support for QGIS 3.
+    - Add support to QGIS 3.
     0.2
     - Fix spatial local entropy, now using locality sum at polygon.
     0.1
