@@ -20,7 +20,7 @@ The plugin allows to compute segregation and diversity measures on spatial and n
 
 ## Requirements
 Segreg is an experimental plugin, so it is required to check the flag `Show also experimental plugins` under QGIS plugin settings.
-- QGIS version 2.0 or later
+- QGIS version 3.0 or later
 - Scipy module
 
 ## Tutorial
